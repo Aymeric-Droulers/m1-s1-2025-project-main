@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [react-app, nest-api]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Ensure ESLint flat config exists
+        run: test -f eslint.config.js || test -f eslint.config.mjs || test -f eslint.config.cjs
+
+      - name: Lint (ESLint, zero warnings)
+        run: npx --no-install eslint . --max-warnings=0
+
+      - name: Type check (tsc, no emit)
+        run: |
+          if [ -f tsconfig.json ]; then
+            npx --no-install tsc -p tsconfig.json --noEmit
+          fi
+
+      - name: Build
+        run: npm run -s build --if-present
+
+      - name: Test
+        run: npm test --if-present
+
+      - name: Ban explicit "any"
+        shell: bash
+        run: |
+          set -e
+          # type annotations like ": any"
+          A=$(grep -RInE --include=\*.ts --include=\*.tsx --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build ':\s*any\b' . || true)
+          # assertions like "<any>"
+          B=$(grep -RInE --include=\*.ts --include=\*.tsx --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build '<\s*any\s*>' . || true)
+          if [ -n "$A$B" ]; then
+            echo "Explicit 'any' found. Remove or fix typing."
+            [ -n "$A" ] && echo "$A"
+            [ -n "$B" ] && echo "$B"
+            exit 1
+          fi
+
+      - name: Enforce class stack and forbid GraphQL
+        shell: bash
+        run: |
+          set -e
+          PKG="package.json"
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync(process.env.PKG, "utf8"));
+            const deps = { ...(pkg.dependencies||{}), ...(pkg.devDependencies||{}) };
+            const project = process.env.PROJECT;
+
+            const required = project === "react-app"
+              ? ["react", "vite", "antd", "@tanstack/react-router"]
+              : ["@nestjs/common", "@nestjs/core", "typeorm", "sqlite3"];
+
+            const forbidden = ["graphql", "@nestjs/graphql"];
+
+            const missing = required.filter(r => !deps[r]);
+            const bad = forbidden.filter(f => deps[f]);
+
+            if (missing.length) {
+              console.error(`Missing required deps for ${project}: ${missing.join(", ")}`);
+              process.exit(1);
+            }
+            if (bad.length) {
+              console.error(`Forbidden deps detected in ${project}: ${bad.join(", ")}`);
+              process.exit(1);
+            }
+          '
+        env:
+          PROJECT: ${{ matrix.project }}
+          PKG: ${{ matrix.project }}/package.json
+
+          

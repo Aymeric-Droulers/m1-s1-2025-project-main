@@ -25,7 +25,7 @@ export function CreateBookModal({ onCreate }: CreateBookModalProps) {
     if (isOpen) {
       loadAuthors()
     }
-  }, [isOpen])
+  }, [isOpen, loadAuthors])
 
   return (
     <>
