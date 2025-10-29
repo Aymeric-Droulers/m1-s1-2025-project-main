@@ -3,13 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthorEntity } from '../authors/author.entity';
 import { BookEntity } from '../books/entities/book.entity';
 import { ClientEntity } from '../clients/entities/client.entity';
+import { SellsEntity } from '../clients/entities/sells.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'db',
-      entities: [AuthorEntity, BookEntity, ClientEntity],
+      entities: [AuthorEntity, BookEntity, ClientEntity, SellsEntity],
       synchronize: true,
     }),
   ],

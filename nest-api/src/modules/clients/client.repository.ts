@@ -42,4 +42,8 @@ export class ClientRepository {
 
     await this.clientRepository.update(id, data);
   }
+
+  public async deleteClient(id: string): Promise<void> {
+    await this.clientRepository.delete(id);
+  }
 }

@@ -1,4 +1,5 @@
 import { AuthorId } from '../authors/author.entity';
+import { SellsEntity } from '../clients/entities/sells.entity';
 
 export type BookAuthorModel = {
   firstName: string;
@@ -10,6 +11,7 @@ export type BookModel = {
   title: string;
   author: BookAuthorModel;
   yearPublished: number;
+  sells?: SellsEntity[];
 };
 
 export type CreateBookModel = {

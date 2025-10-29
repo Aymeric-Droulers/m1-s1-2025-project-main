@@ -1,8 +1,17 @@
 import { ClientModel } from './models/clients.model';
 import { ClientService } from './client.service';
-import { Get, Post, Controller, Body, Patch, Param } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Controller,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CreateClientDto } from './dtos/createClient.dto';
 import { UpdateClientDto } from './dtos/updateClient.dto';
+import { CreateSellDto } from './dtos/createSell.dto';
 
 @Controller('clients')
 export class ClientController {
@@ -29,5 +38,15 @@ export class ClientController {
     @Body() updateClientDto: UpdateClientDto,
   ) {
     return this.clientService.editClient(updateClientDto, id);
+  }
+
+  @Delete(':id')
+  deleteClient(@Param('id') id: string) {
+    return this.clientService.deleteClient(id);
+  }
+
+  @Post('buyBook')
+  sellBook(@Body() createSellDto: CreateSellDto) {
+    return this.clientService.sellBook(createSellDto);
   }
 }
