@@ -5,6 +5,9 @@ import { CreateClientModel } from './models/createClient.model';
 import { EditClientModel } from './models/editClient.model';
 import { SellsRepository } from './sells.repository';
 import { CreateSellModel } from './models/createSell.model';
+import { AllClientsModel } from './models/allClients.model';
+import { ClientEntity } from './entities/client.entity';
+import { SellsEntity } from './entities/sells.entity';
 
 @Injectable()
 export class ClientService {
@@ -13,12 +16,27 @@ export class ClientService {
     private readonly sellsRepository: SellsRepository,
   ) {}
 
-  public async getAllClients(): Promise<ClientModel[]> {
-    return this.clientRepository.getAllClients();
+  public async getAllClients(): Promise<AllClientsModel[]> {
+    const clients: AllClientsModel[] =
+      await this.clientRepository.getAllClients();
+
+    return clients.map((c: ClientEntity) => ({
+      ...c,
+      books_bought: c.books_bought?.map((s) => s.book.id),
+      nb_books_bought: c.books_bought.length,
+    }));
   }
 
   public async getClientById(id: string): Promise<ClientModel | null> {
-    return this.clientRepository.getClientById(id);
+    const client: ClientEntity | null =
+      await this.clientRepository.getClientById(id);
+    if (client == null) {
+      return null;
+    }
+    return {
+      ...client,
+      books_bought: client.books_bought?.map((s) => s.book),
+    };
   }
 
   public async createClient(data: CreateClientModel): Promise<ClientModel> {
@@ -36,7 +54,7 @@ export class ClientService {
     return this.clientRepository.deleteClient(id);
   }
 
-  public async sellBook(data: CreateSellModel) {
+  public async sellBook(data: CreateSellModel): Promise<SellsEntity> {
     return this.sellsRepository.createSell(data);
   }
 }

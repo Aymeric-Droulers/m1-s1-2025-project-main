@@ -4,11 +4,8 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
-  ManyToMany,
-  JoinColumn,
-  JoinTable,
 } from 'typeorm';
-import { BookEntity } from '../../books/entities/book.entity';
+
 import { SellsEntity } from './sells.entity';
 
 export type ClientId = string & { __brand: 'Client' };

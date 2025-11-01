@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -19,8 +20,10 @@ export class SellsEntity extends BaseEntity {
   date: Date;
 
   @ManyToOne(() => ClientEntity, (client: ClientEntity) => client.books_bought)
+  @JoinColumn({ name: 'client_id' })
   client: ClientEntity;
 
   @ManyToOne(() => BookEntity, (book) => book.sells)
+  @JoinColumn({ name: 'book_id' })
   book: BookEntity;
 }

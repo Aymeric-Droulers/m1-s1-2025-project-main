@@ -5,6 +5,7 @@ import { DataSource, Repository } from 'typeorm';
 import { ClientModel } from './models/clients.model';
 import { CreateClientModel } from './models/createClient.model';
 import { EditClientModel } from './models/editClient.model';
+import { AllClientsModel } from './models/allClients.model';
 
 @Injectable()
 export class ClientRepository {
@@ -14,18 +15,27 @@ export class ClientRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  public async getAllClients(): Promise<ClientModel[]> {
-    return await this.clientRepository.find();
+  public async getAllClients(): Promise<AllClientsModel[]> {
+    return await this.clientRepository.find({
+      relations: ['books_bought', 'books_bought.book'],
+    });
   }
 
-  public async getClientById(id: string): Promise<ClientModel | null> {
+  public async getClientById(id: string): Promise<ClientEntity | null> {
     return await this.clientRepository.findOne({
+      relations: ['books_bought', 'books_bought.book'],
       where: { id: id as ClientId },
     });
   }
 
   public async createClient(data: CreateClientModel): Promise<ClientModel> {
-    return this.clientRepository.save(this.clientRepository.create(data));
+    const created: ClientEntity = await this.clientRepository.save(
+      this.clientRepository.create(data),
+    );
+    return {
+      ...created,
+      books_bought: [],
+    };
   }
 
   public async editClient(

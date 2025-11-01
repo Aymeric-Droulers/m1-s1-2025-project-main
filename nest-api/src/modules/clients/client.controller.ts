@@ -1,4 +1,3 @@
-import { ClientModel } from './models/clients.model';
 import { ClientService } from './client.service';
 import {
   Get,
@@ -12,23 +11,26 @@ import {
 import { CreateClientDto } from './dtos/createClient.dto';
 import { UpdateClientDto } from './dtos/updateClient.dto';
 import { CreateSellDto } from './dtos/createSell.dto';
+import { AllClientsModel } from './models/allClients.model';
+import { ClientModel } from './models/clients.model';
+import { SellsEntity } from './entities/sells.entity';
 
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Get()
-  getClients(): Promise<ClientModel[]> {
+  getClients(): Promise<AllClientsModel[]> {
     return this.clientService.getAllClients();
   }
 
   @Get(':id')
-  getClientById(@Param('id') id: string) {
+  getClientById(@Param('id') id: string): Promise<ClientModel | null> {
     return this.clientService.getClientById(id);
   }
 
   @Post()
-  createClient(@Body() createClientDto: CreateClientDto) {
+  createClient(@Body() createClientDto: CreateClientDto): Promise<ClientModel> {
     return this.clientService.createClient(createClientDto);
   }
 
@@ -36,17 +38,17 @@ export class ClientController {
   updateClient(
     @Param('id') id: string,
     @Body() updateClientDto: UpdateClientDto,
-  ) {
+  ): Promise<ClientModel | undefined> {
     return this.clientService.editClient(updateClientDto, id);
   }
 
   @Delete(':id')
-  deleteClient(@Param('id') id: string) {
+  deleteClient(@Param('id') id: string): Promise<void> {
     return this.clientService.deleteClient(id);
   }
 
   @Post('buyBook')
-  sellBook(@Body() createSellDto: CreateSellDto) {
+  sellBook(@Body() createSellDto: CreateSellDto): Promise<SellsEntity> {
     return this.clientService.sellBook(createSellDto);
   }
 }

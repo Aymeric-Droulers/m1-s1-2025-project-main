@@ -28,6 +28,12 @@ export class SellsRepository {
     if (!client || !book) {
       throw new Error('Client or Book is undefined');
     }
-    return this.sellsRepository.save(this.sellsRepository.create(data));
+    return this.sellsRepository.save(
+      this.sellsRepository.create({
+        date: data.date ?? new Date(),
+        client,
+        book,
+      }),
+    );
   }
 }

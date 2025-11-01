@@ -1,4 +1,4 @@
-import { SellsEntity } from '../entities/sells.entity';
+import { BookModel } from '../../books/book.model';
 
 export type ClientModel = {
   id: string;
@@ -6,5 +6,5 @@ export type ClientModel = {
   last_name: string;
   mail: string;
   photo_link: string;
-  books_bought?: SellsEntity[];
+  books_bought?: BookModel[] | undefined;
 };
