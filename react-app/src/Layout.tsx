@@ -5,6 +5,9 @@ import { Route as booksRoute } from './routes/books'
 import { Space, type MenuProps } from 'antd'
 import { BookOutlined, HomeOutlined, InfoOutlined } from '@ant-design/icons'
 import Menu from 'antd/es/menu/menu'
+import { Route as clientRoute } from './routes/ClientModel'
+import { CiOutlined } from '@ant-design/icons'
+
 
 interface LayoutProps {
   children: React.ReactNode
@@ -27,6 +30,18 @@ export function Layout({ children }: LayoutProps) {
       key: 'about',
       icon: <InfoOutlined />,
     },
+    {
+      //pour le client
+      label: <Link to={clientRoute.to}>Client</Link>,
+      key: 'client',
+      icon: <CiOutlined />,
+    },
+    {
+      //liste des clients
+      label: <Link to="/listeClient">Liste Client</Link>,
+      key: 'listeClient',
+      icon: <CiOutlined />,
+    }
   ]
 
   return (
