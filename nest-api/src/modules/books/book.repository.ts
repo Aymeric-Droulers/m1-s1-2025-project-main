@@ -1,97 +1,88 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { AuthorEntity } from '../authors/author.entity';
-import {
-  BookModel,
-  CreateBookModel,
-  FilterBooksModel,
-  UpdateBookModel,
-} from './book.model';
+import { ILike, Repository } from 'typeorm';
 import { BookEntity, BookId } from './entities/book.entity';
+import { AuthorEntity } from '../authors/author.entity';
+import { BookModel } from './book.model';
+import { CreateBookModel } from './book.model';
 
 @Injectable()
 export class BookRepository {
   constructor(
-    @InjectRepository(AuthorEntity)
-    private readonly authorRepository: Repository<AuthorEntity>,
     @InjectRepository(BookEntity)
     private readonly bookRepository: Repository<BookEntity>,
-    private readonly dataSource: DataSource,
   ) {}
 
-  public async getAllBooks(
-    input?: FilterBooksModel,
-  ): Promise<[BookModel[], number]> {
-    const [books, totalCount] = await this.bookRepository.findAndCount({
-      take: input?.limit,
-      skip: input?.offset,
-      relations: { author: true },
-      order: input?.sort,
-    });
-
-    return [books, totalCount];
-  }
-
-  public async getBookById(id: string): Promise<BookModel | undefined> {
-    const book = await this.bookRepository.findOne({
-      where: { id: id as BookId },
-    });
-
-    if (!book) {
-      return undefined;
-    }
-
-    const author = await this.authorRepository.findOne({
-      where: { id: book.authorId },
-    });
-
-    if (!author) {
-      return undefined;
-    }
-
+  private toModel(e: BookEntity): BookModel {
     return {
-      ...book,
-      author,
+      id: e.id,
+      title: e.title,
+      description: e.description,
+      pictureUrl: e.pictureUrl,
+      yearPublished: e.yearPublished,
+      author: (e.author as AuthorEntity)
     };
   }
 
-  public async createBook(book: CreateBookModel): Promise<BookModel> {
-    const author = await this.authorRepository.findOne({
-      where: { id: book.authorId },
+  async findAll(params: { page?: number; limit?: number; search?: string } = {}): Promise<[BookModel[], number]> {
+    const page = Math.max(1, Number(params.page ?? 1));
+    const limit = Math.min(100, Math.max(1, Number(params.limit ?? 20)));
+    const search = params.search?.trim();
+
+    const [rows, total] = await this.bookRepository.findAndCount({
+      where: search ? { title: ILike(`%${search}%`) } : {},
+      order: { title: 'ASC', id: 'ASC' },
+      relations: ['author'],
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    if (!author) {
-      throw new Error('Author not found');
-    }
-
-    return this.bookRepository.save(this.bookRepository.create(book));
+    return [rows.map((e) => this.toModel(e)), total];
   }
 
-  public async updateBook(
-    id: string,
-    book: UpdateBookModel,
-  ): Promise<BookModel | undefined> {
-    const oldBook = await this.bookRepository.findOne({
-      where: { id: id as BookId },
+  async findById(id: BookId): Promise<BookModel | null> {
+    const row = await this.bookRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+    return row ? this.toModel(row) : null;
+  }
+
+  async create(book: CreateBookModel): Promise<BookModel> {
+    // map CreateBookModel.authorId → relation
+    const entity = this.bookRepository.create({
+      title: book.title,
+      description: book.description,
+      pictureUrl: book.pictureUrl,
+      yearPublished: book.yearPublished,
+      author: book.authorId ? ({ id: book.authorId } as AuthorEntity) : undefined,
     });
 
-    if (!oldBook) {
-      return undefined;
-    }
-
-    await this.bookRepository.update(id, book);
+    const saved = await this.bookRepository.save(entity);
+    const withAuthor = await this.bookRepository.findOne({
+      where: { id: saved.id },
+      relations: ['author'],
+    });
+    return this.toModel(withAuthor!);
   }
 
-  public async deleteBook(id: string): Promise<void> {
+  async update(id: BookId, book: Partial<CreateBookModel>): Promise<BookModel | null> {
+    // translate authorId if present
+    const patch: Partial<BookEntity> & { author?: AuthorEntity | undefined } = { ...book } as any;
+    if ('authorId' in (book as any)) {
+      patch.author = (book as any).authorId ? ({ id: (book as any).authorId } as AuthorEntity) : undefined;
+      delete (patch as any).authorId;
+    }
+
+    await this.bookRepository.update(id, patch);
+    const reloaded = await this.bookRepository.findOne({
+      where: { id },
+      relations: { author: true },
+    });
+    return reloaded ? this.toModel(reloaded) : null;
+  }
+
+  async remove(id: BookId): Promise<void> {
     await this.bookRepository.delete(id);
-  }
-
-  public async deleteBooks(ids: string[]): Promise<void> {
-    await this.dataSource.transaction(async (transactionalEntityManager) => {
-      await Promise.all(
-        ids.map((id) => transactionalEntityManager.delete(BookEntity, { id })),
-      );
-    });
   }
 }

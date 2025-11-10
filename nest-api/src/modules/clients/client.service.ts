@@ -8,6 +8,8 @@ import { CreateSellModel } from './models/createSell.model';
 import { AllClientsModel } from './models/allClients.model';
 import { ClientEntity } from './entities/client.entity';
 import { SellsEntity } from './entities/sells.entity';
+import { BookEntity } from '../books/entities/book.entity';
+import { BookModel } from '../books/book.model';
 
 @Injectable()
 export class ClientService {
@@ -22,7 +24,16 @@ export class ClientService {
 
     return clients.map((c: ClientEntity) => ({
       ...c,
-      books_bought: c.books_bought?.map((s) => s.book.id),
+      books_bought: c.books_bought
+         ?.filter((s) => !!s.book && !!s.book.author)
+         .map((s) => ({
+           id: s.book.id,
+           title: s.book.title,
+           description: s.book.description,
+           pictureUrl: s.book.pictureUrl,
+           yearPublished: s.book.yearPublished,
+           author: s.book.author!,
+         })) as BookModel[],
       nb_books_bought: c.books_bought.length,
     }));
   }
@@ -35,7 +46,20 @@ export class ClientService {
     }
     return {
       ...client,
-      books_bought: client.books_bought?.map((s) => s.book),
+      books_bought: client.books_bought
+      ?.filter((s) => s.book && s.book.author)
+      .map((s) => ({
+        id: s.book.id,
+        title: s.book.title,
+        description: s.book.description,
+        pictureUrl: s.book.pictureUrl,
+        yearPublished: s.book.yearPublished,
+        author: {
+          id: s.book.author!.id,
+          firstName: s.book.author!.firstName,
+          lastName: s.book.author!.lastName,
+        },
+      })),
     };
   }
 
