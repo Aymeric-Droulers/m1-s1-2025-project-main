@@ -1,43 +1,76 @@
-import { Injectable } from '@nestjs/common';
-import {
-  BookModel,
-  CreateBookModel,
-  FilterBooksModel,
-  UpdateBookModel,
-} from './book.model';
-import { BookRepository } from './book.repository';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Like, Repository } from 'typeorm';
+import { BookEntity, BookId } from './entities/book.entity';
+import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
+
+export interface Paginated<T> {
+  data: T[];
+  meta: { total: number; page: number; limit: number };
+}
 
 @Injectable()
-export class BookService {
-  constructor(private readonly bookRepository: BookRepository) {}
+export class BooksService {
+  constructor(
+    @InjectRepository(BookEntity)
+    private readonly repo: Repository<BookEntity>,
+  ) {}
 
-  public async getAllBooks(
-    input?: FilterBooksModel,
-  ): Promise<[BookModel[], number]> {
-    return this.bookRepository.getAllBooks(input);
+  async create(dto: CreateBookDto): Promise<BookEntity> {
+    const entity = this.repo.create({
+      title: dto.title,
+      description: dto.description,
+      pictureUrl: dto.pictureUrl,
+      yearPublished: dto.yearPublished,
+      author: { id: dto.authorId } as any,
+    });
+    return this.repo.save(entity);
   }
 
-  public async getBookById(id: string): Promise<BookModel | undefined> {
-    return this.bookRepository.getBookById(id);
+  async findAll(opts?: { page?: number; limit?: number; search?: string }): Promise<Paginated<BookEntity>> {
+    const page = Math.max(1, Number(opts?.page ?? 1));
+    const limit = Math.min(100, Math.max(1, Number(opts?.limit ?? 20)));
+    const search = (opts?.search ?? '').trim();
+
+    const where = search ? { title: Like(`%${search}%`) } : {};
+
+    const [data, total] = await this.repo.findAndCount({
+      where,
+      order: { title: 'ASC', id: 'ASC' },
+      relations: { author: true },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { data, meta: { total, page, limit } };
   }
 
-  public async createBook(book: CreateBookModel): Promise<BookModel> {
-    return this.bookRepository.createBook(book);
+  async findOne(id: BookId): Promise<BookEntity> {
+    const book = await this.repo.findOne({ where: { id }, relations: { author: true } });
+    if (!book) throw new NotFoundException(`Book ${id} not found`);
+    return book;
   }
 
-  public async updateBook(
-    id: string,
-    book: UpdateBookModel,
-  ): Promise<BookModel | undefined> {
-    const oldBook = await this.getBookById(id);
-    if (!oldBook) {
-      return undefined;
+  async update(id: BookId, dto: UpdateBookDto): Promise<BookEntity> {
+    const existing = await this.findOne(id);
+
+    const patch: Partial<BookEntity> & { author?: any } = {
+      title: dto.title,
+      description: dto.description,
+      pictureUrl: dto.pictureUrl,
+      yearPublished: dto.yearPublished,
+    };
+    if (dto.authorId !== undefined) {
+      patch.author = dto.authorId ? ({ id: dto.authorId } as any) : null;
     }
 
-    return this.bookRepository.updateBook(id, book);
+    const merged = this.repo.merge(existing, patch);
+    return this.repo.save(merged);
   }
 
-  public async deleteBook(id: string): Promise<void> {
-    await this.bookRepository.deleteBook(id);
+  async remove(id: BookId): Promise<void> {
+    const res = await this.repo.delete(id);
+    if (!res.affected) throw new NotFoundException(`Book ${id} not found`);
   }
 }
