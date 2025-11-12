@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -21,21 +22,30 @@ export class BooksController {
   constructor(private readonly svc: BooksService) {}
 
   @Post()
-  create(@Body() dto: CreateBookDto): Promise<BookEntity> {
-    return this.svc.create(dto);
+  create(
+    @Body() dto: CreateBookDto,
+    @Query('authorId') authorIdQ?: string,
+  ): Promise<BookEntity> {
+    const authorId = dto.authorId ?? authorIdQ;
+    if (!authorId) throw new BadRequestException('authorId requis');
+    return this.svc.create({ ...dto, authorId });
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('authorId') authorId?: string,
   ) {
-    return this.svc.findAll({
+    const res = await this.svc.findAll({
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
       search: search ?? undefined,
+      authorId: authorId ?? undefined,
     });
+
+    return { books: res.items, total: res.total, page: res.page, limit: res.limit };
   }
 
   @Get(':id')

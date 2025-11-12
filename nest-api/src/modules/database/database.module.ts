@@ -12,6 +12,7 @@ import { SellsEntity } from '../clients/entities/sells.entity';
       database: 'db',
       entities: [AuthorEntity, BookEntity, ClientEntity, SellsEntity],
       synchronize: true,
+      logging: ['query', 'error'],
     }),
   ],
 })
