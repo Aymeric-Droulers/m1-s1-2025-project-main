@@ -8,11 +8,18 @@ export const useBookProvider = () => {
   const loadBooks = () => {
     axios
       .get('http://localhost:3000/books')
-      .then(data => {
-        setBooks(data.data.data)
+      .then(res => {
+        const payload = res.data;
+        const list =
+          Array.isArray(payload) ? payload :
+          payload.books ?? payload.items ?? payload.data ?? [];
+        setBooks(list as BookModel[]);
       })
-      .catch(err => console.error(err))
-  }
+      .catch(err => {
+        console.error(err);
+        setBooks([]); // fail safe
+      });
+  };
 
   const createBook = (book: CreateBookModel) => {
     axios

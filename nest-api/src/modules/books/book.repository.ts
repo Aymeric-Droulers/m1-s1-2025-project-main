@@ -77,7 +77,7 @@ export class BookRepository {
     await this.bookRepository.update(id, patch);
     const reloaded = await this.bookRepository.findOne({
       where: { id },
-      relations: { author: true },
+      relations: ['author'],
     });
     return reloaded ? this.toModel(reloaded) : null;
   }

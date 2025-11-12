@@ -10,6 +10,13 @@ export interface Paginated<T> {
   meta: { total: number; page: number; limit: number };
 }
 
+type FindAllArgs = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  authorId?: string;
+};
+
 @Injectable()
 export class BooksService {
   constructor(
@@ -17,33 +24,29 @@ export class BooksService {
     private readonly repo: Repository<BookEntity>,
   ) {}
 
-  async create(dto: CreateBookDto): Promise<BookEntity> {
+  async create(dto: { title: string; description?: string; pictureUrl?: string; yearPublished?: number; authorId: string }) {
+    const { authorId, ...rest } = dto;
     const entity = this.repo.create({
-      title: dto.title,
-      description: dto.description,
-      pictureUrl: dto.pictureUrl,
-      yearPublished: dto.yearPublished,
-      author: { id: dto.authorId } as any,
+      ...rest,
+      author: { id: authorId } as any, // set the relation -> writes books.authorId
     });
     return this.repo.save(entity);
   }
 
-  async findAll(opts?: { page?: number; limit?: number; search?: string }): Promise<Paginated<BookEntity>> {
-    const page = Math.max(1, Number(opts?.page ?? 1));
-    const limit = Math.min(100, Math.max(1, Number(opts?.limit ?? 20)));
-    const search = (opts?.search ?? '').trim();
+  async findAll({ page = 1, limit = 10, search, authorId }: FindAllArgs) {
+    const where: any = {};
+    if (search) where.title = Like(`%${search}%`);
+    if (authorId) where.author = { id: authorId };
 
-    const where = search ? { title: Like(`%${search}%`) } : {};
-
-    const [data, total] = await this.repo.findAndCount({
+    const [items, total] = await this.repo.findAndCount({
       where,
-      order: { title: 'ASC', id: 'ASC' },
-      relations: { author: true },
+      relations: { author: true },        // <-- brings back author
+      order: { title: 'ASC', id: 'ASC' }, // match old query ordering
       skip: (page - 1) * limit,
       take: limit,
     });
 
-    return { data, meta: { total, page, limit } };
+    return { items, total, page, limit };
   }
 
   async findOne(id: BookId): Promise<BookEntity> {
