@@ -16,7 +16,7 @@ export type BookId = string;
 
 @Entity({ name: 'books' })
 export class BookEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id!: BookId;
 
   @Index()
