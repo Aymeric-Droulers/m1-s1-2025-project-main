@@ -1,21 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useState } from 'react'
+import { Form, Input, Button, Card } from 'antd'
+import { UserOutlined, MailOutlined, LinkOutlined } from '@ant-design/icons'
 
 export const Route = createFileRoute('/ClientModel')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const [first_name, setFirstName] = useState('')
-  const [last_name, setLastName] = useState('')
-  const [mail, setEmail] = useState('')
-  const [photoLink, setPhotoLink] = useState('')
+  const [form] = Form.useForm()
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // Envoi des données au backend (Nest) pour création du client
+  const handleSubmit = async (values: any) => {
+    setLoading(true)
     try {
-      const body = { first_name, last_name, mail, photoLink }
+      // Dans handleSubmit, changer :
+      const body = { 
+        first_name: values.first_name, 
+        last_name: values.last_name, 
+        mail: values.mail, 
+        photo_link: values.photo_link || ''
+      }
       const res = await fetch('http://localhost:3000/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,52 +41,108 @@ function RouteComponent() {
     } catch (err) {
       console.error('Erreur réseau:', err)
       alert('Erreur réseau lors de la création du client')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Informations Client</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label>Prenom : </label>
-          <input
-            type="text"
-            id="first_name"
-            value={first_name}
-            onChange={e => setFirstName(e.target.value)}
-            className="first-name-input"
-            required
-          />
-        </div>
-        <div>
-          <label>Nom : </label>
-          <input
-            type="text"
-            id="last_name"
-            value={last_name}
-            onChange={e => setLastName(e.target.value)}
-            className="last-name-input"
-            required
-          />
-        </div>
+    <div style={{ 
+      padding: '24px', 
+      maxWidth: '500px', 
+      margin: '0 auto',
+      
+    }}>
+      <Card 
+        title="Informations Client"
+        style={{ 
+          backgroundColor: '#808080',
+          border: '2px solid #000',
+          borderRadius: '8px',
+        }}
+        bodyStyle={{ 
+          backgroundColor: '#808080',
+          padding: '24px'
+        }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          autoComplete="off"
+          style={{ backgroundColor: '#808080' }}
+        >
+          <Form.Item
+            label="Prénom"
+            name="first_name"
+            rules={[{ required: true, message: 'Veuillez saisir le prénom' }]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input 
+              prefix={<UserOutlined />}
+              placeholder="Saisir le prénom"
+              style={{ backgroundColor: 'white' }}
+            />
+          </Form.Item>
 
-        <div>
-          <label>Email : </label>
-          <input
-            type="email"
-            id="mail"
-            value={mail}
-            onChange={e => setEmail(e.target.value)}
-            className="email-input"
-            required
-          />
-        </div>
+          <Form.Item
+            label="Nom"
+            name="last_name"
+            rules={[{ required: true, message: 'Veuillez saisir le nom' }]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input 
+              prefix={<UserOutlined />}
+              placeholder="Saisir le nom"
+              style={{ backgroundColor: 'white' }}
+            />
+          </Form.Item>
 
-        <button type="submit" className="boutton-submit">
-          Envoyer
-        </button>
-      </form>
+          <Form.Item
+            label="Email"
+            name="mail"
+            rules={[
+              { required: true, message: 'Veuillez saisir l\'email' },
+              { type: 'email', message: 'Format d\'email invalide' }
+            ]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input 
+              prefix={<MailOutlined />}
+              placeholder="Saisir l'email"
+              style={{ backgroundColor: 'white' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Lien de la photo (facultatif)"
+            name="photoLink"
+            style={{ marginBottom: 24 }}
+          >
+            <Input 
+              prefix={<LinkOutlined />}
+              placeholder="https://example.com/photo.jpg"
+              style={{ backgroundColor: 'white' }}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={loading}
+              style={{ 
+                width: '100%',
+                height: '40px',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              Envoyer
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   )
 }

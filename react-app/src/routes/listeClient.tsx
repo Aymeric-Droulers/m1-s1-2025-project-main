@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useState, useEffect } from 'react'
+import { List, Button, Modal, Form, Input, message, Card } from 'antd'
 
 export const Route = createFileRoute('/listeClient')({
   component: ListeClient,
@@ -10,7 +11,9 @@ type Client = {
   first_name: string
   last_name: string
   mail: string
-  photoLink: string
+  photo_link: string  
+  books_bought: any[]
+  nb_books_bought: number
 }
 
 const initialClients: Client[] = [
@@ -38,23 +41,15 @@ const initialClients: Client[] = [
 ]
 
 function ListeClient() {
+  const navigate = useNavigate()
   const [clients, setClients] = useState<Client[]>(initialClients)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [newClient, setNewClient] = useState<{
-    first_name: string
-    last_name: string
-    mail: string
-    photoLink: string
-  }>({
-    first_name: '',
-    last_name: '',
-    mail: '',
-    photoLink: '',
-  })
+  const [loading, setLoading] = useState(false)
+  const [form] = Form.useForm()
 
-  // Récupérer la liste des clients depuis le backend (si disponible)
+  // Récupérer la liste des clients depuis le backend
   useEffect(() => {
     let mounted = true
     const load = async () => {
@@ -68,6 +63,7 @@ function ListeClient() {
         if (mounted && Array.isArray(data)) setClients(data)
       } catch (err) {
         console.error('Erreur lors du fetch clients:', err)
+        message.error('Erreur lors du chargement des clients')
       }
     }
     load()
@@ -76,181 +72,222 @@ function ListeClient() {
     }
   }, [])
 
-  // Navigation fictive vers la page de détails (à remplacer par un vrai routeur)
-  const goToClientDetails = (clientId: number) => {
-    window.location.href = `/client/${clientId}`
+  // Navigation vers la page de détails
+  const goToClientDetails = (clientId: string) => {
+    navigate({ to: '/client/$clientId', params: { clientId } })
   }
 
-  const handleDelete = (client: Client) => {
+  const handleDeleteClick = (client: Client, e: React.MouseEvent) => {
+    e.stopPropagation()
     setClientToDelete(client)
     setShowDeleteModal(true)
   }
 
   const confirmDelete = async () => {
-    if (clientToDelete) {
-      try {
-        const res = await fetch(`http://localhost:3000/clients/${clientToDelete.id}`, { method: 'DELETE' })
-        if (!res.ok) {
-          console.error('Échec suppression client')
-          alert('Erreur lors de la suppression')
-        } else {
-          setClients(clients.filter(c => c.id !== clientToDelete.id))
-        }
-      } catch (err) {
-        console.error('Erreur réseau:', err)
-        alert('Erreur réseau lors de la suppression')
+    if (!clientToDelete) return
+
+    try {
+      const res = await fetch(`http://localhost:3000/clients/${clientToDelete.id}`, { 
+        method: 'DELETE' 
+      })
+      
+      if (!res.ok) {
+        throw new Error('Échec de la suppression')
       }
+      
+      setClients(clients.filter(c => c.id !== clientToDelete.id))
+      message.success('Client supprimé avec succès')
+    } catch (err) {
+      console.error('Erreur suppression client:', err)
+      message.error('Erreur lors de la suppression du client')
+    } finally {
+      setShowDeleteModal(false)
+      setClientToDelete(null)
     }
-    setShowDeleteModal(false)
-    setClientToDelete(null)
   }
 
-  const handleCreateClient = async () => {
+  const handleCreateClient = async (values: any) => {
+    setLoading(true)
     try {
+      const clientData = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        mail: values.mail,
+        photoLink: values.photoLink || ''
+      }
+
       const res = await fetch('http://localhost:3000/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClient),
+        body: JSON.stringify(clientData),
       })
+      
       if (!res.ok) {
-        const text = await res.text()
-        console.error('Erreur création client:', text)
-        alert('Erreur lors de la création du client')
-        return
+        throw new Error('Erreur lors de la création')
       }
+      
       const created = await res.json()
       setClients([...clients, created])
       setShowCreateModal(false)
-      setNewClient({ first_name: '', last_name: '', mail: '', photoLink: '' })
+      form.resetFields()
+      message.success('Client créé avec succès')
     } catch (err) {
-      console.error('Erreur réseau:', err)
-      alert('Erreur réseau lors de la création')
+      console.error('Erreur création client:', err)
+      message.error('Erreur lors de la création du client')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Liste des Clients</h2>
-      <button onClick={() => setShowCreateModal(true)}>Créer un client</button>
-      <ul className="divide-y divide-gray-200">
-        {clients.map(client => (
-          <li
-            key={client.id}
-            className="py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
+    <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <Card 
+        title="Liste des Clients"
+        style={{ 
+          backgroundColor: '#808080',
+          border: '2px solid #000',
+          borderRadius: '8px',
+        }}
+        bodyStyle={{ 
+          backgroundColor: '#808080',
+          padding: '24px'
+        }}
+        extra={
+          <Button 
+            type="primary" 
+            onClick={() => setShowCreateModal(true)}
           >
-            <div
-              onClick={() => goToClientDetails(client.id)}
-              className="flex-1"
-            >
-              <span className="font-semibold">
-                {client.first_name} {client.last_name}
-              </span>
-              <span className="ml-4 text-gray-500">{client.mail}</span>
-            </div>
-            <button
-              className="ml-4 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              onClick={e => {
-                e.stopPropagation()
-                handleDelete(client)
+            Créer un client
+          </Button>
+        }
+      >
+        <List
+          dataSource={clients}
+          renderItem={client => (
+            <List.Item
+              actions={[
+                <Button 
+                  danger 
+                  onClick={(e) => handleDeleteClick(client, e)}
+                >
+                  Supprimer
+                </Button>
+              ]}
+              style={{ 
+                cursor: 'pointer',
+                backgroundColor: '#808080',
+                borderBottom: '1px solid #000',
+                padding: '12px 0'
               }}
+              onClick={() => goToClientDetails(client.id)}
             >
-              Supprimer
-            </button>
-          </li>
-        ))}
-      </ul>
+              <List.Item.Meta
+                title={
+                  <span style={{ color: 'white', fontSize: '16px', fontWeight: 'bold' }}>
+                    {client.first_name} {client.last_name}
+                  </span>
+                }
+              />
+            </List.Item>
+          )}
+          style={{ backgroundColor: '#808080' }}
+        />
+      </Card>
 
       {/* Modale de suppression */}
-      {showDeleteModal && clientToDelete && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Confirmer la suppression</h3>
-            <p>
-              Voulez-vous vraiment supprimer {clientToDelete.first_name}{' '}
-              {clientToDelete.last_name} ?
-            </p>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded"
-                onClick={() => setShowDeleteModal(false)}
+      <Modal
+        title="Confirmer la suppression"
+        open={showDeleteModal}
+        onOk={confirmDelete}
+        onCancel={() => {
+          setShowDeleteModal(false)
+          setClientToDelete(null)
+        }}
+        okText="Supprimer"
+        cancelText="Annuler"
+        okType="danger"
+      >
+        <p>
+          Êtes-vous sûr de vouloir supprimer le client{" "}
+          <strong>
+            {clientToDelete?.first_name} {clientToDelete?.last_name}
+          </strong>
+          ?
+        </p>
+        <p>Cette action est irréversible.</p>
+      </Modal>
+
+      {/* Modal de création */}
+      <Modal
+        title="Créer un nouveau client"
+        open={showCreateModal}
+        onCancel={() => {
+          setShowCreateModal(false)
+          form.resetFields()
+        }}
+        footer={null}
+        style={{ top: 20 }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleCreateClient}
+        >
+          <Form.Item
+            label="Prénom"
+            name="first_name"
+            rules={[{ required: true, message: 'Veuillez saisir le prénom' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Nom"
+            name="last_name"
+            rules={[{ required: true, message: 'Veuillez saisir le nom' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Email"
+            name="mail"
+            rules={[
+              { required: true, message: 'Veuillez saisir l\'email' },
+              { type: 'email', message: 'Format d\'email invalide' }
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Lien de la photo (facultatif)"
+            name="photoLink"
+          >
+            <Input placeholder="https://example.com/photo.jpg" />
+          </Form.Item>
+
+          <Form.Item>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <Button 
+                onClick={() => {
+                  setShowCreateModal(false)
+                  form.resetFields()
+                }}
               >
                 Annuler
-              </button>
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded"
-                onClick={confirmDelete}
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modale de création */}
-      {showCreateModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h3 className="text-lg font-bold mb-4">Créer un client</h3>
-            <form
-              onSubmit={e => {
-                e.preventDefault()
-                handleCreateClient()
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Prénom
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  value={newClient.first_name}
-                  onChange={e =>
-                    setNewClient({ ...newClient, first_name: e.target.value })
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="last_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Nom
-                </label>
-                <input
-                  type="text"
-                  id="last_name"
-                  value={newClient.last_name}
-                  onChange={e =>
-                    setNewClient({ ...newClient, last_name: e.target.value })
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                loading={loading}
               >
                 Créer
-              </button>
-            </form>
-            <button
-              className="mt-4 w-full px-4 py-2 bg-gray-300 rounded"
-              onClick={() => setShowCreateModal(false)}
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      )}
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }
