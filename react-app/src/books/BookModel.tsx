@@ -2,6 +2,8 @@ export type BookModel = {
   id: string
   title: string
   yearPublished: number
+  description: string
+  pictureUrl: string
   author: {
     id: string
     firstName: string
