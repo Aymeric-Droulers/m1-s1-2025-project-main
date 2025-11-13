@@ -18,24 +18,30 @@ export class ClientService {
     private readonly sellsRepository: SellsRepository,
   ) {}
 
+  private clientEntityListToClientModelList(
+    listEntity: ClientEntity[] | AllClientsModel[],
+  ): ClientModel[] {
+    return listEntity.map((c: ClientEntity) => ({
+      ...c,
+      books_bought: c.books_bought
+        ?.filter((s) => !!s.book && !!s.book.author)
+        .map((s) => ({
+          id: s.book.id,
+          title: s.book.title,
+          description: s.book.description,
+          pictureUrl: s.book.pictureUrl,
+          yearPublished: s.book.yearPublished,
+          author: s.book.author!,
+        })) as BookModel[],
+      nb_books_bought: c.books_bought.length,
+    }));
+  }
+
   public async getAllClients(): Promise<AllClientsModel[]> {
     const clients: AllClientsModel[] =
       await this.clientRepository.getAllClients();
 
-    return clients.map((c: ClientEntity) => ({
-      ...c,
-      books_bought: c.books_bought
-         ?.filter((s) => !!s.book && !!s.book.author)
-         .map((s) => ({
-           id: s.book.id,
-           title: s.book.title,
-           description: s.book.description,
-           pictureUrl: s.book.pictureUrl,
-           yearPublished: s.book.yearPublished,
-           author: s.book.author!,
-         })) as BookModel[],
-      nb_books_bought: c.books_bought.length,
-    }));
+    return this.clientEntityListToClientModelList(clients);
   }
 
   public async getClientById(id: string): Promise<ClientModel | null> {
@@ -47,19 +53,19 @@ export class ClientService {
     return {
       ...client,
       books_bought: client.books_bought
-      ?.filter((s) => s.book && s.book.author)
-      .map((s) => ({
-        id: s.book.id,
-        title: s.book.title,
-        description: s.book.description,
-        pictureUrl: s.book.pictureUrl,
-        yearPublished: s.book.yearPublished,
-        author: {
-          id: s.book.author!.id,
-          firstName: s.book.author!.firstName,
-          lastName: s.book.author!.lastName,
-        },
-      })),
+        ?.filter((s) => s.book && s.book.author)
+        .map((s) => ({
+          id: s.book.id,
+          title: s.book.title,
+          description: s.book.description,
+          pictureUrl: s.book.pictureUrl,
+          yearPublished: s.book.yearPublished,
+          author: {
+            id: s.book.author!.id,
+            firstName: s.book.author!.firstName,
+            lastName: s.book.author!.lastName,
+          },
+        })),
     };
   }
 
@@ -80,5 +86,15 @@ export class ClientService {
 
   public async sellBook(data: CreateSellModel): Promise<SellsEntity> {
     return this.sellsRepository.createSell(data);
+  }
+
+  public async getClientsWhoBoughtBook(bookId: string): Promise<ClientModel[]> {
+    const sells: SellsEntity[] =
+      await this.sellsRepository.getSellsByBookId(bookId);
+    const clientsList: ClientEntity[] = sells.map(
+      (sell: SellsEntity) => sell.client,
+    );
+
+    return this.clientEntityListToClientModelList(clientsList);
   }
 }

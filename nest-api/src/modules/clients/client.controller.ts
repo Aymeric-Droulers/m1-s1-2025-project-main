@@ -24,6 +24,11 @@ export class ClientController {
     return this.clientService.getAllClients();
   }
 
+  @Get('/byBook/:id')
+  getClientsWhoBoughtBook(@Param('id') id: string): Promise<ClientModel[]> {
+    return this.clientService.getClientsWhoBoughtBook(id);
+  }
+
   @Get(':id')
   getClientById(@Param('id') id: string): Promise<ClientModel | null> {
     return this.clientService.getClientById(id);
@@ -51,4 +56,5 @@ export class ClientController {
   sellBook(@Body() createSellDto: CreateSellDto): Promise<SellsEntity> {
     return this.clientService.sellBook(createSellDto);
   }
+
 }
