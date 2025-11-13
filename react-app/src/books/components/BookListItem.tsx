@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { BookModel, UpdateBookModel } from '../BookModel'
-import { Button, Col, Row } from 'antd'
+import { Button, Col, Row, Popconfirm } from 'antd'
 import {
   CheckOutlined,
   CloseOutlined,
@@ -49,20 +49,18 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
           <Link
             to={`/books/$bookId`}
             params={{ bookId: book.id }}
-            style={{
-              margin: 'auto 0',
-              textAlign: 'left',
-            }}
+            style={{ margin: 'auto 0', textAlign: 'left' }}
           >
-            <span style={{ fontWeight: 'bold' }}>{book.title}</span> -{' '}
-            {book.yearPublished}
+            <span style={{ fontWeight: 'bold' }}>{book.title}</span> — {book.yearPublished}
           </Link>
         )}
       </Col>
+
       <Col span={9} style={{ margin: 'auto 0' }}>
         by <span style={{ fontWeight: 'bold' }}>{book.author.firstName}</span>{' '}
         <span style={{ fontWeight: 'bold' }}>{book.author.lastName}</span>
       </Col>
+
       <Col
         span={3}
         style={{
@@ -86,9 +84,19 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
             <EditOutlined />
           </Button>
         )}
-        <Button type="primary" danger onClick={() => onDelete(book.id)}>
-          <DeleteOutlined />
-        </Button>
+
+        <Popconfirm
+          title="Supprimer ce livre ?"
+          description={`« ${book.title} » sera définitivement supprimé.`}
+          okText="Supprimer"
+          cancelText="Annuler"
+          okButtonProps={{ danger: true }}
+          onConfirm={() => onDelete(book.id)}
+        >
+          <Button type="primary" danger>
+            <DeleteOutlined />
+          </Button>
+        </Popconfirm>
       </Col>
     </Row>
   )
