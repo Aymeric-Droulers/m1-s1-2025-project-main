@@ -17,13 +17,21 @@ export class ClientRepository {
 
   public async getAllClients(): Promise<AllClientsModel[]> {
     return await this.clientRepository.find({
-      relations: ['books_bought', 'books_bought.book'],
+      relations: [
+        'books_bought',
+        'books_bought.book',
+        'books_bought.book.author',
+      ],
     });
   }
 
   public async getClientById(id: string): Promise<ClientEntity | null> {
     return await this.clientRepository.findOne({
-      relations: ['books_bought', 'books_bought.book'],
+      relations: [
+        'books_bought',
+        'books_bought.book',
+        'books_bought.book.author',
+      ],
       where: { id: id as ClientId },
     });
   }
