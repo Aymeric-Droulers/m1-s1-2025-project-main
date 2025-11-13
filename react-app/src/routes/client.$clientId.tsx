@@ -1,11 +1,26 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Button, Card, message, Spin, Alert } from 'antd'
-import { UserOutlined, MailOutlined, LinkOutlined, SaveOutlined, EditOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Card, message, Spin, Alert, List, Typography } from 'antd'
+import { UserOutlined, MailOutlined, LinkOutlined, SaveOutlined, EditOutlined, BookOutlined, CalendarOutlined } from '@ant-design/icons'
+
+const { Title, Text } = Typography
 
 export const Route = createFileRoute('/client/$clientId')({
   component: ClientDetails,
 })
+
+type Book = {
+  id: string
+  title: string
+  description: string
+  pictureUrl: string
+  yearPublished: number
+  author: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+}
 
 type Client = {
   id: string
@@ -13,19 +28,19 @@ type Client = {
   last_name: string
   mail: string
   photo_link: string
-  books_bought: any[]
+  books_bought: Book[]
   nb_books_bought: number
 }
 
 function ClientDetails() {
   const { clientId } = Route.useParams()
+  const navigate = useNavigate()
   const [client, setClient] = useState<Client | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form] = Form.useForm()
   const [error, setError] = useState<string | null>(null)
-  const [apiError, setApiError] = useState<string | null>(null)
 
   // Charger les données du client
   useEffect(() => {
@@ -58,12 +73,9 @@ function ClientDetails() {
     fetchClient()
   }, [clientId, form])
 
-  // Sauvegarder les modifications avec PATCH
+  // Sauvegarder les modifications
   const handleSave = async (values: any) => {
-    console.log('Données à sauvegarder:', values)
     setSaving(true)
-    setApiError(null)
-    
     try {
       const updatedClient = {
         first_name: values.first_name,
@@ -71,9 +83,6 @@ function ClientDetails() {
         mail: values.mail,
         photo_link: values.photo_link || ''
       }
-
-      console.log('Envoi PATCH vers:', `http://localhost:3000/clients/${clientId}`)
-      console.log('Données envoyées:', updatedClient)
 
       const res = await fetch(`http://localhost:3000/clients/${clientId}`, {
         method: 'PATCH',
@@ -84,51 +93,41 @@ function ClientDetails() {
         body: JSON.stringify(updatedClient),
       })
 
-      console.log('Statut PATCH:', res.status)
-
       if (!res.ok) {
-        let errorMessage = `Erreur ${res.status}`
-        try {
-          const errorText = await res.text()
-          console.log('Erreur texte:', errorText)
-          errorMessage += `: ${errorText}`
-        } catch {
-          errorMessage += `: ${res.statusText}`
-        }
-        throw new Error(errorMessage)
+        throw new Error('Erreur lors de la mise à jour')
       }
 
-      // Recharger les données après la modification
+      // Recharger les données
       const updatedResponse = await fetch(`http://localhost:3000/clients/${clientId}`)
       if (updatedResponse.ok) {
         const savedClient = await updatedResponse.json()
         setClient(savedClient)
-        console.log('Client mis à jour:', savedClient)
       }
 
       setEditing(false)
       message.success('Client modifié avec succès')
       
     } catch (err) {
-      console.error('Erreur détaillée:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue'
-      setApiError(errorMessage)
+      console.error('Erreur modification client:', err)
       message.error('Erreur lors de la modification du client')
     } finally {
       setSaving(false)
     }
   }
 
+  // Navigation vers la page détail d'un livre
+  const goToBookDetails = (bookId: string) => {
+    navigate({ to: '/books/$bookId', params: { bookId } })
+  }
+
   // Activer le mode édition
   const handleEdit = () => {
     setEditing(true)
-    setApiError(null)
   }
 
   // Annuler l'édition
   const handleCancel = () => {
     setEditing(false)
-    setApiError(null)
     if (client) {
       form.setFieldsValue({
         first_name: client.first_name,
@@ -166,7 +165,8 @@ function ClientDetails() {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      {/* Carte informations client */}
       <Card 
         title={`Détails du Client ${editing ? '(Modification)' : ''}`}
         extra={
@@ -184,43 +184,13 @@ function ClientDetails() {
           backgroundColor: '#808080',
           border: '2px solid #000',
           borderRadius: '8px',
+          marginBottom: '24px'
         }}
         bodyStyle={{ 
           backgroundColor: '#808080',
           padding: '24px'
         }}
       >
-        {/* Message d'erreur API */}
-        {apiError && (
-          <Alert
-            message="Erreur de sauvegarde"
-            description={
-              <div>
-                <p>Le backend a retourné une erreur :</p>
-                <code style={{ 
-                  fontSize: '12px', 
-                  background: '#f5f5f5', 
-                  padding: '8px', 
-                  display: 'block', 
-                  marginTop: '8px',
-                  borderRadius: '4px',
-                  color: '#d32f2f'
-                }}>
-                  {apiError}
-                </code>
-                <p style={{ marginTop: '12px', fontSize: '12px' }}>
-                  
-                </p>
-              </div>
-            }
-            type="error"
-            showIcon
-            closable
-            onClose={() => setApiError(null)}
-            style={{ marginBottom: '16px' }}
-          />
-        )}
-
         <Form
           form={form}
           layout="vertical"
@@ -287,7 +257,7 @@ function ClientDetails() {
             />
           </Form.Item>
 
-          {editing && (
+          {editing ? (
             <Form.Item style={{ marginBottom: 0 }}>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Button 
@@ -308,20 +278,14 @@ function ClientDetails() {
                 </Button>
               </div>
             </Form.Item>
-          )}
+          ) : null}
         </Form>
-
-        {/* livre achete */}
-        <div style={{ marginTop: '16px', color: 'white' }}>
-          <p><strong>Livres achetés:</strong> {client.nb_books_bought}</p>
-          {client.books_bought && client.books_bought.length > 0 && (
-            <p><strong>Dernier achat:</strong> {client.books_bought[client.books_bought.length - 1]}</p>
-          )}
-        </div>
 
         {client.photo_link && client.photo_link.trim() !== '' && (
           <div style={{ marginTop: '16px', textAlign: 'center' }}>
-            <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
+            <p style={{ color: 'white', marginBottom: '8px' }}>
+              Photo actuelle :
+            </p>
             <img 
               src={client.photo_link}
               alt={`${client.first_name} ${client.last_name}`}
@@ -332,7 +296,7 @@ function ClientDetails() {
                 objectFit: 'cover',
                 border: '2px solid white'
               }}
-              onError={(e) => {
+              onError={e => {
                 e.currentTarget.style.display = 'none'
               }}
             />
@@ -340,6 +304,115 @@ function ClientDetails() {
         )}
       </Card>
 
+      {/* Carte livres achetés */}
+      <Card 
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BookOutlined />
+            <span>Livres Achetés ({client.nb_books_bought})</span>
+          </div>
+        }
+        style={{ 
+          backgroundColor: '#808080',
+          border: '2px solid #000',
+          borderRadius: '8px',
+        }}
+        bodyStyle={{ 
+          backgroundColor: '#808080',
+          padding: '24px'
+        }}
+      >
+        {client.books_bought && client.books_bought.length > 0 ? (
+          <List
+            dataSource={client.books_bought}
+            renderItem={(book) => (
+              <List.Item
+                style={{ 
+                  cursor: 'pointer',
+                  backgroundColor: '#808080',
+                  borderBottom: '1px solid #000',
+                  padding: '16px 0'
+                }}
+                onClick={() => goToBookDetails(book.id)}
+                actions={[
+                  <Button 
+                    type="link" 
+                    icon={<BookOutlined />}
+                    onClick={() => goToBookDetails(book.id)}
+                  >
+                    Voir détails
+                  </Button>
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={
+                    book.pictureUrl ? (
+                      <img 
+                        src={book.pictureUrl} 
+                        alt={book.title}
+                        style={{
+                          width: '60px',
+                          height: '80px',
+                          objectFit: 'cover',
+                          borderRadius: '4px'
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '60px',
+                          height: '80px',
+                          backgroundColor: '#1890ff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          color: 'white'
+                        }}
+                      >
+                        <BookOutlined />
+                      </div>
+                    )
+                  }
+                  title={
+                    <Text strong style={{ color: 'white', fontSize: '16px' }}>
+                      {book.title}
+                    </Text>
+                  }
+                  description={
+                    <div style={{ color: '#f0f0f0' }}>
+                      <div>
+                        <strong>Auteur :</strong> {book.author.firstName} {book.author.lastName}
+                      </div>
+                      <div>
+                        <strong>Année :</strong> {book.yearPublished}
+                      </div>
+                      {book.description && (
+                        <div style={{ marginTop: '4px' }}>
+                          {book.description.length > 100 
+                            ? `${book.description.substring(0, 100)}...` 
+                            : book.description
+                          }
+                        </div>
+                      )}
+                    </div>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
+            <BookOutlined style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
+            <div>Aucun livre acheté</div>
+            <Text type="secondary" style={{ color: '#f0f0f0' }}>
+              Ce client n'a pas encore acheté de livres
+            </Text>
+          </div>
+        )}
+      </Card>
+
+      {/* Boutons de navigation */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
         <Button 
           onClick={() => window.history.back()}
@@ -348,7 +421,7 @@ function ClientDetails() {
           Retour
         </Button>
         <Button 
-          onClick={() => window.location.href = '/listeClient'}
+          onClick={() => navigate({ to: '/listeClient' })}
           style={{ flex: 1 }}
         >
           Liste des clients
