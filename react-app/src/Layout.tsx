@@ -8,7 +8,6 @@ import Menu from 'antd/es/menu/menu'
 import { Route as clientRoute } from './routes/ClientModel'
 import { CiOutlined } from '@ant-design/icons'
 
-
 interface LayoutProps {
   children: React.ReactNode
 }
