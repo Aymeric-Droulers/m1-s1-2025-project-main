@@ -18,7 +18,7 @@ export class SellsRepository {
     private readonly booksRepository: Repository<BookEntity>,
   ) {}
 
-  public async createSell(data: CreateSellModel) {
+  public async createSell(data: CreateSellModel): Promise<SellsEntity> {
     const client = await this.clientsRepository.findOne({
       where: { id: data.clientId },
     });
@@ -35,5 +35,14 @@ export class SellsRepository {
         book,
       }),
     );
+  }
+
+  public async getSellsByBookId(bookId: string): Promise<SellsEntity[]> {
+    return await this.sellsRepository.find({
+      where: {
+        book: { id: bookId },
+      },
+      relations: ['client'],
+    });
   }
 }
