@@ -3,6 +3,8 @@ import { AuthorModel, AuthorDetailsModel, CreateAuthorModel, UpdateAuthorModel }
 import { AuthorEntity, AuthorId } from './author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BookEntity } from '../books/entities/book.entity';
+import { BookModel, BookAuthorModel } from '../books/book.model';
 
 @Injectable()
 export class AuthorRepository {
@@ -12,15 +14,30 @@ export class AuthorRepository {
   ) {}
 
 
-  private toModel(entity: AuthorEntity): AuthorModel {
-    const books = entity.books ?? [];
+ /*private toModel(entity: AuthorEntity): AuthorModel {
+    const booksEntities: BookEntity[] = entity.books ?? [];
+
+    const books: BookModel[] = booksEntities.map((book) => ({
+    id: book.id,
+    title: book.title,
+    yearPublished: book.yearPublished,
+    description: book.description,
+    pictureUrl: book.pictureUrl,
+    sells: book.sells, 
+    author: {
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+    },
+  }));
+
+
     const booksCount = books.length;
 
     const totalSales = books.reduce((sum, book) => {
       // book.sells vient de BookEntity (relation OneToMany)
-      const sells = (book as any).sells as { id: string }[] | undefined;
+      //const sells = (book as any).sells as { id: string }[] | undefined;
       // Version sans any :
-      //const sells = book.sells ?? [];
+      const sells = book.sells ?? [];
       return sum + (sells?.length ?? 0);
     }, 0);
     const averageSalesPerBook = booksCount > 0 ? totalSales / booksCount : 0;
@@ -32,8 +49,60 @@ export class AuthorRepository {
       pictureUrl: entity.pictureUrl,
       booksCount,
       averageSalesPerBook,
+      books,
     };
   }
+  */
+
+
+   private toBaseModel(entity: AuthorEntity): AuthorModel {
+    const books: BookEntity[] = entity.books ?? [];
+    const booksCount = books.length;
+
+    const totalSales = books.reduce((sum, book) => {
+      const sells = book.sells ?? [];
+      return sum + sells.length;
+    }, 0);
+
+    const averageSalesPerBook =
+      booksCount > 0 ? totalSales / booksCount : 0;
+
+    return {
+      id: entity.id,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      pictureUrl: entity.pictureUrl,
+      booksCount,
+      averageSalesPerBook,
+    };
+  }
+
+  private toDetailsModel(entity: AuthorEntity): AuthorDetailsModel {
+    const base = this.toBaseModel(entity);
+
+    const authorForBook: BookAuthorModel = {
+      firstName: base.firstName,
+      lastName: base.lastName,
+    };
+
+    const booksEntities: BookEntity[] = entity.books ?? [];
+
+    const books: BookModel[] = booksEntities.map((book) => ({
+      id: book.id,
+      title: book.title,
+      yearPublished: book.yearPublished,
+      description: book.description,
+      pictureUrl: book.pictureUrl,
+      sells: book.sells, // SellsEntity[], typé
+      author: authorForBook,
+    }));
+
+    return {
+      ...base,
+      books,
+    };
+  }
+
 
 
   public async getAllAuthors(): Promise<AuthorModel[]> {
@@ -50,12 +119,12 @@ export class AuthorRepository {
       },
     });
 
-     return authors.map((author) => this.toModel(author));
+     return authors.map((author) => this.toBaseModel(author));
   }
   
 
 
-  public async findById(id: AuthorId): Promise<AuthorModel | null> {
+  public async findById(id: AuthorId): Promise<AuthorDetailsModel  | null> {
     const author = await this.authorRepository.findOne({
       where: { id },
       relations: {
@@ -65,7 +134,7 @@ export class AuthorRepository {
       },
     });
 
-    return author ? this.toModel(author) : null;
+    return author ? this.toDetailsModel(author) : null;
   }
 
   
@@ -87,7 +156,7 @@ export class AuthorRepository {
       throw new Error('Author not found after creation');
     }
     
-    return this.toModel(reloaded);
+    return this.toBaseModel(reloaded);
   }
 
 
@@ -102,7 +171,7 @@ export class AuthorRepository {
       relations: { books: { sells: true } },
     });
 
-    return updated ? this.toModel(updated) : null;
+    return updated ? this.toBaseModel(updated) : null;
   }
 
   public async removeAuthor(id: AuthorId): Promise<void> {

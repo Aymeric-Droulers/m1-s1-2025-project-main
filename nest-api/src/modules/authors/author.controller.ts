@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { AuthorService } from './author.service';
 import { CreateAuthorDto, UpdateAuthorDto } from './author.dto';
 import { AuthorId } from './author.entity';
-import { AuthorModel } from './author.model';
+import { AuthorModel, AuthorDetailsModel } from './author.model';
 
 @Controller('authors')
 export class AuthorController {
@@ -13,7 +13,7 @@ export class AuthorController {
     return this.authorService.getAllAuthors();
   }
   @Get(':id')
-  public async getAuthorById(@Param('id') id: string): Promise<AuthorModel> {
+  public async getAuthorById(@Param('id') id: string): Promise<AuthorDetailsModel> {
     return this.authorService.getAuthorById(id as AuthorId);
   }
 
