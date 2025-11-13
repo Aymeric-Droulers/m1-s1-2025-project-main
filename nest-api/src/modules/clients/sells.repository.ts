@@ -42,7 +42,7 @@ export class SellsRepository {
       where: {
         book: { id: bookId },
       },
-      relations: ['client'],
+      relations: ['client', 'client.books_bought'],
     });
   }
 }

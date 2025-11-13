@@ -20,11 +20,13 @@ export class BookRepository {
       description: e.description,
       pictureUrl: e.pictureUrl,
       yearPublished: e.yearPublished,
-      author: (e.author as AuthorEntity)
+      author: e.author as AuthorEntity,
     };
   }
 
-  async findAll(params: { page?: number; limit?: number; search?: string } = {}): Promise<[BookModel[], number]> {
+  async findAll(
+    params: { page?: number; limit?: number; search?: string } = {},
+  ): Promise<[BookModel[], number]> {
     const page = Math.max(1, Number(params.page ?? 1));
     const limit = Math.min(100, Math.max(1, Number(params.limit ?? 20)));
     const search = params.search?.trim();
@@ -49,13 +51,15 @@ export class BookRepository {
   }
 
   async create(book: CreateBookModel): Promise<BookModel> {
-    // map CreateBookModel.authorId → relation
+    // map CreateBookModel.authorId -> relation
     const entity = this.bookRepository.create({
       title: book.title,
       description: book.description,
       pictureUrl: book.pictureUrl,
       yearPublished: book.yearPublished,
-      author: book.authorId ? ({ id: book.authorId } as AuthorEntity) : undefined,
+      author: book.authorId
+        ? ({ id: book.authorId } as AuthorEntity)
+        : undefined,
     });
 
     const saved = await this.bookRepository.save(entity);
@@ -66,12 +70,24 @@ export class BookRepository {
     return this.toModel(withAuthor!);
   }
 
-  async update(id: BookId, book: Partial<CreateBookModel>): Promise<BookModel | null> {
-    // translate authorId if present
-    const patch: Partial<BookEntity> & { author?: AuthorEntity | undefined } = { ...book } as any;
-    if ('authorId' in (book as any)) {
-      patch.author = (book as any).authorId ? ({ id: (book as any).authorId } as AuthorEntity) : undefined;
-      delete (patch as any).authorId;
+  async update(
+    id: BookId,
+    book: Partial<CreateBookModel>,
+  ): Promise<BookModel | null> {
+    const patch: Partial<BookEntity> & {
+      author?: AuthorEntity | undefined;
+      authorId?: string;
+    } = {
+      ...book,
+    } as Partial<BookEntity> & {
+      author?: AuthorEntity | undefined;
+      authorId?: string;
+    };
+    if ('authorId' in book) {
+      patch.author = book.authorId
+        ? ({ id: book.authorId } as AuthorEntity)
+        : undefined;
+      delete patch.authorId;
     }
 
     await this.bookRepository.update(id, patch);
