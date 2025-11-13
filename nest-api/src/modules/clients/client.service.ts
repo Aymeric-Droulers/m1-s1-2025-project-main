@@ -53,8 +53,8 @@ export class ClientService {
     return {
       ...client,
       books_bought: client.books_bought
-        ?.filter((s) => s.book && s.book.author)
-        .map((s) => ({
+        ?.filter((s: SellsEntity) => s.book && s.book.author)
+        .map((s: SellsEntity) => ({
           id: s.book.id,
           title: s.book.title,
           description: s.book.description,
