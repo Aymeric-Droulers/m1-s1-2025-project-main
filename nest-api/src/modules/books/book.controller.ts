@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -45,7 +44,12 @@ export class BooksController {
       authorId: authorId ?? undefined,
     });
 
-    return { books: res.items, total: res.total, page: res.page, limit: res.limit };
+    return {
+      books: res.items,
+      total: res.total,
+      page: res.page,
+      limit: res.limit,
+    };
   }
 
   @Get(':id')

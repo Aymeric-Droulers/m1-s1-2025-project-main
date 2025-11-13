@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { BookEntity, BookId } from './entities/book.entity';
-import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { AuthorEntity } from '../authors/author.entity';
 
 export interface Paginated<T> {
   data: T[];
@@ -24,23 +24,30 @@ export class BooksService {
     private readonly repo: Repository<BookEntity>,
   ) {}
 
-  async create(dto: { title: string; description?: string; pictureUrl?: string; yearPublished?: number; authorId: string }) {
+  async create(dto: {
+    title: string;
+    description?: string;
+    pictureUrl?: string;
+    yearPublished?: number;
+    authorId: string;
+  }) {
     const { authorId, ...rest } = dto;
     const entity = this.repo.create({
       ...rest,
-      author: { id: authorId } as any, // set the relation -> writes books.authorId
+      author: { id: authorId } as AuthorEntity,
     });
     return this.repo.save(entity);
   }
 
   async findAll({ page = 1, limit = 10, search, authorId }: FindAllArgs) {
-    const where: any = {};
+    const where: FindOptionsWhere<BookEntity> = {};
     if (search) where.title = Like(`%${search}%`);
-    if (authorId) where.author = { id: authorId };
+    if (authorId)
+      where.author = { id: authorId } as FindOptionsWhere<AuthorEntity>;
 
     const [items, total] = await this.repo.findAndCount({
       where,
-      relations: { author: true },        // <-- brings back author
+      relations: { author: true }, // <-- brings back author
       order: { title: 'ASC', id: 'ASC' }, // match old query ordering
       skip: (page - 1) * limit,
       take: limit,
@@ -50,7 +57,10 @@ export class BooksService {
   }
 
   async findOne(id: BookId): Promise<BookEntity> {
-    const book = await this.repo.findOne({ where: { id }, relations: { author: true } });
+    const book = await this.repo.findOne({
+      where: { id },
+      relations: { author: true },
+    });
     if (!book) throw new NotFoundException(`Book ${id} not found`);
     return book;
   }
@@ -58,14 +68,16 @@ export class BooksService {
   async update(id: BookId, dto: UpdateBookDto): Promise<BookEntity> {
     const existing = await this.findOne(id);
 
-    const patch: Partial<BookEntity> & { author?: any } = {
+    const patch: Partial<BookEntity> & { author?: AuthorEntity | null } = {
       title: dto.title,
       description: dto.description,
       pictureUrl: dto.pictureUrl,
       yearPublished: dto.yearPublished,
     };
     if (dto.authorId !== undefined) {
-      patch.author = dto.authorId ? ({ id: dto.authorId } as any) : null;
+      patch.author = dto.authorId
+        ? ({ id: dto.authorId } as AuthorEntity)
+        : null;
     }
 
     const merged = this.repo.merge(existing, patch);
