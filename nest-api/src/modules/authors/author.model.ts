@@ -8,6 +8,7 @@ export type AuthorModel = {
   pictureUrl?: string;
   booksCount: number;
   averageSalesPerBook: number;
+  books?: BookModel[];
 };
 
 export type CreateAuthorModel = {

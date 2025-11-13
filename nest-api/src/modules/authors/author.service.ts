@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException  } from '@nestjs/common';
 import { AuthorId } from './author.entity';
-import { AuthorModel, CreateAuthorModel, UpdateAuthorModel } from './author.model';
+import { AuthorModel, AuthorDetailsModel, CreateAuthorModel, UpdateAuthorModel } from './author.model';
 import { AuthorRepository } from './author.repository';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class AuthorService {
     return this.authorRepository.getAllAuthors();
   }
 
-  public async getAuthorById(id: AuthorId): Promise<AuthorModel> {
+  public async getAuthorById(id: AuthorId): Promise<AuthorDetailsModel> {
     const author = await this.authorRepository.findById(id);
     if (!author) {
       throw new NotFoundException(`Author ${id} not found`);
