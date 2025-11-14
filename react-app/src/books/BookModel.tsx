@@ -24,5 +24,14 @@ export type BookUpdatePayload = {
   description: string
   pictureUrl?: string
 }
+export type BookContextValue = {
+  book: BookModel | null
+  loading: boolean
+  error: string | null
+  saving: boolean
+  apiError: string | null
+  updateBook: (values: BookUpdatePayload) => Promise<void>
+  clearApiError: () => void
+}
 
 export type UpdateBookModel = Partial<CreateBookModel>
