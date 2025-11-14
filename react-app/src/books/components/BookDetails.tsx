@@ -285,35 +285,39 @@ export function BookDetails() {
               (() => {
                 const last = book.achats[book.achats.length - 1]
                 return (
-                  <p>
-                    <strong>Dernier achat :</strong> {last.first_name}{' '}
-                    {last.last_name} ({last.mail})
+                  <p
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {last.photo_link ? (
+                      <img
+                        src={last.photo_link}
+                        alt={`${last.first_name} ${last.last_name}`}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                        }}
+                        onError={e => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      <UserOutlined style={{ fontSize: 24, color: 'white' }} />
+                    )}
+                    <span>
+                      <strong>Dernier achat :</strong> {last.first_name}{' '}
+                      {last.last_name} ({last.mail})
+                    </span>
                   </p>
                 )
               })()}
           </div>
-
-          {book.photo_link && book.photo_link.trim() !== '' && (
-            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <p style={{ color: 'white', marginBottom: '8px' }}>
-                Photo actuelle :
-              </p>
-              <img
-                src={book.photo_link}
-                alt={`${book.first_name} ${book.last_name}`}
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid white',
-                }}
-                onError={e => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-            </div>
-          )}
         </Card>
 
         {/* Carte livres achetés */}

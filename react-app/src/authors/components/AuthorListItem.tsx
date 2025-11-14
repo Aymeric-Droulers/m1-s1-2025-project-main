@@ -42,16 +42,25 @@ export function AuthorListItem({
     <Row
       style={{
         width: '100%',
-        height: '50px',
+        minHeight: '50px',
         borderRadius: '10px',
         backgroundColor: '#EEEEEE',
         margin: '1rem 0',
         padding: '.25rem',
         display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
       }}
     >
-      <Col span={10} style={{ margin: 'auto 0' }}>
+      <Col
+        span={10}
+        style={{
+          margin: 'auto 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '.5rem',
+        }}
+      >
         <SafeImage src={author.pictureUrl} size={32} />
         {isEditing ? (
           <>
