@@ -13,7 +13,7 @@ export function CreateBookModal({ onCreate, bookId }: CreateBookModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [date, setDate] = useState<number>(0)
   const [clientId, setClientId] = useState<string | undefined>(undefined)
-  const { clients, loadClients } = useBookPurshaseProviders()
+  const { ClientModel, loadClients } = useBookPurshaseProviders()
 
   const onClose = () => {
     setDate(0)
@@ -58,7 +58,7 @@ export function CreateBookModal({ onCreate, bookId }: CreateBookModalProps) {
           <Select
             style={{ width: '100%' }}
             placeholder="Choisir un client"
-            options={(clients ?? []).map(client => ({
+            options={(ClientModel ?? []).map(client => ({
               label: `${client.first_name} ${client.last_name}`,
               value: client.id,
             }))}
