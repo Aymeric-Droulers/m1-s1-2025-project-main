@@ -1,68 +1,71 @@
-import { createFileRoute } from '@tanstack/react-router'
-import React, { useState } from 'react'
-import { Form, Input, Button, Card } from 'antd'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState, type JSX } from 'react'
+import { Form, Input, Button, Card, message } from 'antd'
 import { UserOutlined, MailOutlined, LinkOutlined } from '@ant-design/icons'
 
-export const Route = createFileRoute('/ClientModel')({
-  component: RouteComponent,
+export const Route = createFileRoute('/clients/create')({
+  component: CreateClient,
 })
 
-function RouteComponent() {
-  const [form] = Form.useForm()
-  const [loading, setLoading] = useState(false)
+interface ClientFormValues {
+  first_name: string
+  last_name: string
+  mail: string
+  photo_link?: string
+}
 
-  const handleSubmit = async (values: any) => {
+function CreateClient(): JSX.Element {
+  const [form] = Form.useForm()
+  const [loading, setLoading] = useState<boolean>(false)
+  const navigate = useNavigate()
+
+  const handleSubmit = async (values: ClientFormValues): Promise<void> => {
     setLoading(true)
     try {
-      // Dans handleSubmit, changer :
-      const body = { 
-        first_name: values.first_name, 
-        last_name: values.last_name, 
-        mail: values.mail, 
-        photo_link: values.photo_link || ''
+      const body = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        mail: values.mail,
+        photo_link: values.photo_link || '',
       }
-      const res = await fetch('http://localhost:3000/clients', {
+
+      const res: Response = await fetch('http://localhost:3000/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
       if (!res.ok) {
-        const text = await res.text()
+        const text: string = await res.text()
         console.error('Erreur création client:', text)
-        alert('Erreur lors de la création du client')
+        message.error('Erreur lors de la création du client')
         return
       }
 
       const created = await res.json()
       console.log('Client créé:', created)
-      // Redirection vers la liste des clients
-      window.location.href = '/listeClient'
+      message.success('Client créé avec succès')
+      navigate({ to: '/clients' })
     } catch (err) {
       console.error('Erreur réseau:', err)
-      alert('Erreur réseau lors de la création du client')
+      message.error('Erreur réseau lors de la création du client')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      maxWidth: '500px', 
-      margin: '0 auto',
-      
-    }}>
-      <Card 
-        title="Informations Client"
-        style={{ 
+    <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
+      <Card
+        title="Créer un Client"
+        style={{
           backgroundColor: '#808080',
           border: '2px solid #000',
           borderRadius: '8px',
         }}
-        bodyStyle={{ 
+        bodyStyle={{
           backgroundColor: '#808080',
-          padding: '24px'
+          padding: '24px',
         }}
       >
         <Form
@@ -78,7 +81,7 @@ function RouteComponent() {
             rules={[{ required: true, message: 'Veuillez saisir le prénom' }]}
             style={{ marginBottom: 16 }}
           >
-            <Input 
+            <Input
               prefix={<UserOutlined />}
               placeholder="Saisir le prénom"
               style={{ backgroundColor: 'white' }}
@@ -91,7 +94,7 @@ function RouteComponent() {
             rules={[{ required: true, message: 'Veuillez saisir le nom' }]}
             style={{ marginBottom: 16 }}
           >
-            <Input 
+            <Input
               prefix={<UserOutlined />}
               placeholder="Saisir le nom"
               style={{ backgroundColor: 'white' }}
@@ -102,12 +105,12 @@ function RouteComponent() {
             label="Email"
             name="mail"
             rules={[
-              { required: true, message: 'Veuillez saisir l\'email' },
-              { type: 'email', message: 'Format d\'email invalide' }
+              { required: true, message: "Veuillez saisir l'email" },
+              { type: 'email', message: "Format d'email invalide" },
             ]}
             style={{ marginBottom: 16 }}
           >
-            <Input 
+            <Input
               prefix={<MailOutlined />}
               placeholder="Saisir l'email"
               style={{ backgroundColor: 'white' }}
@@ -116,10 +119,10 @@ function RouteComponent() {
 
           <Form.Item
             label="Lien de la photo (facultatif)"
-            name="photoLink"
+            name="photo_link"
             style={{ marginBottom: 24 }}
           >
-            <Input 
+            <Input
               prefix={<LinkOutlined />}
               placeholder="https://example.com/photo.jpg"
               style={{ backgroundColor: 'white' }}
@@ -127,18 +130,18 @@ function RouteComponent() {
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0 }}>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
-              style={{ 
+              style={{
                 width: '100%',
                 height: '40px',
                 fontSize: '16px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
               }}
             >
-              Envoyer
+              Créer le client
             </Button>
           </Form.Item>
         </Form>
