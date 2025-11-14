@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useClientProvider } from '../providers/useClientProvider.tsx'
 import { Button, Card, List, Modal } from 'antd'
 import type { ClientModel } from '../ClientModel.tsx'
+import { Link } from '@tanstack/react-router'
 
 export function ClientList() {
   const { clients, loadClients, createClient, updateClient, deleteClient } =
@@ -28,7 +29,10 @@ export function ClientList() {
    * @param client - Le client à supprimer
    * @param e - L'événement de clic
    */
-  const handleDeleteClick = (client: ClientModel, e: React.MouseEvent): void => {
+  const handleDeleteClick = (
+    client: ClientModel,
+    e: React.MouseEvent,
+  ): void => {
     e.stopPropagation()
     setClientToDelete(client)
     setShowDeleteModal(true)
@@ -58,9 +62,12 @@ export function ClientList() {
           padding: '24px',
         }}
         extra={
-          <Button type="primary" onClick={goToCreateClient}>
-            Créer un client
-          </Button>
+          <Link
+            to={`/clients/create`}
+            style={{ margin: 'auto 0', textAlign: 'left' }}
+          >
+            Create a client
+          </Link>
         }
       >
         {/* Liste affichant chaque client avec bouton de suppression */}
@@ -85,7 +92,6 @@ export function ClientList() {
                 borderBottom: '1px solid #000',
                 padding: '12px 0',
               }}
-              onClick={(): void => goToClientDetails(client.id)}
             >
               <List.Item.Meta
                 title={
