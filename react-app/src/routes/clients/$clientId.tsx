@@ -1,3 +1,9 @@
+/**
+ * Page de détails d'un client
+ * Permet de consulter et modifier les informations d'un client
+ * Affiche également la liste des livres achetés par le client
+ */
+
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, type JSX } from 'react'
 import {
@@ -21,10 +27,12 @@ import {
 
 const { Text } = Typography
 
+// Configuration de la route avec paramètre dynamique clientId
 export const Route = createFileRoute('/clients/$clientId')({
   component: ClientDetails,
 })
 
+// Interface pour les valeurs du formulaire de modification
 interface ClientFormValues {
   first_name: string
   last_name: string
@@ -32,6 +40,7 @@ interface ClientFormValues {
   photo_link?: string
 }
 
+// Type représentant un livre avec ses informations complètes
 type Book = {
   id: string
   title: string
@@ -45,6 +54,7 @@ type Book = {
   }
 }
 
+// Type représentant un client avec tous ses détails
 type Client = {
   id: string
   first_name: string
@@ -55,17 +65,27 @@ type Client = {
   nb_books_bought: number
 }
 
+/**
+ * Composant principal affichant les détails d'un client
+ * Gère l'affichage, la modification et la navigation
+ */
 function ClientDetails(): JSX.Element {
+  // Récupération de l'ID du client depuis l'URL
   const { clientId } = Route.useParams()
   const navigate = useNavigate()
-  const [client, setClient] = useState<Client | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [editing, setEditing] = useState<boolean>(false)
-  const [saving, setSaving] = useState<boolean>(false)
-  const [form] = Form.useForm()
-  const [error, setError] = useState<string | null>(null)
 
-  // Charger les données du client
+  // États pour gérer les données et l'interface
+  const [client, setClient] = useState<Client | null>(null) // Données du client
+  const [loading, setLoading] = useState<boolean>(true) // État de chargement
+  const [editing, setEditing] = useState<boolean>(false) // Mode édition activé/désactivé
+  const [saving, setSaving] = useState<boolean>(false) // État de sauvegarde
+  const [form] = Form.useForm() // Instance du formulaire Ant Design
+  const [error, setError] = useState<string | null>(null) // Message d'erreur
+
+  /**
+   * Effet pour charger les données du client au montage du composant
+   * Se déclenche également si l'ID du client change
+   */
   useEffect((): void => {
     const fetchClient = async (): Promise<void> => {
       try {
@@ -100,7 +120,10 @@ function ClientDetails(): JSX.Element {
     fetchClient()
   }, [clientId, form])
 
-  // Sauvegarder les modifications
+  /**
+   * Fonction pour sauvegarder les modifications du client
+   * Envoie une requête PATCH à l'API puis recharge les données
+   */
   const handleSave = async (values: ClientFormValues): Promise<void> => {
     setSaving(true)
     try {
@@ -146,17 +169,24 @@ function ClientDetails(): JSX.Element {
     }
   }
 
-  // Navigation vers la page détail d'un livre
+  /**
+   * Navigation vers la page de détails d'un livre
+   * @param bookId - L'identifiant du livre à afficher
+   */
   const goToBookDetails = (bookId: string): void => {
     navigate({ to: '/books/$bookId', params: { bookId } })
   }
 
-  // Activer le mode édition
+  /**
+   * Active le mode édition pour permettre la modification des informations
+   */
   const handleEdit = (): void => {
     setEditing(true)
   }
 
-  // Annuler l'édition
+  /**
+   * Annule les modifications et restaure les valeurs originales
+   */
   const handleCancel = (): void => {
     setEditing(false)
     if (client) {
@@ -168,7 +198,7 @@ function ClientDetails(): JSX.Element {
       })
     }
   }
-
+  // Affichage pendant le chargement
   if (loading) {
     return (
       <div
@@ -183,7 +213,7 @@ function ClientDetails(): JSX.Element {
       </div>
     )
   }
-
+  // Affichage en cas d'erreur ou si le client n'existe pas
   if (error || !client) {
     return (
       <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
@@ -203,7 +233,7 @@ function ClientDetails(): JSX.Element {
       </div>
     )
   }
-
+  // Affichage des détails du client
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
       {/* Carte informations client */}
@@ -292,7 +322,7 @@ function ClientDetails(): JSX.Element {
               disabled={!editing || saving}
             />
           </Form.Item>
-
+          {/* Boutons de sauvegarde ou annulation */}
           {editing ? (
             <Form.Item style={{ marginBottom: 0 }}>
               <div style={{ display: 'flex', gap: '8px' }}>

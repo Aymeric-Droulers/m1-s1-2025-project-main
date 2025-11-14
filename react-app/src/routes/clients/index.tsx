@@ -1,16 +1,25 @@
+/**
+ * Page listant tous les clients
+ * Affiche la liste des clients avec possibilité de les consulter, créer ou supprimer
+ * Charge les données depuis l'API au montage du composant
+ */
+
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useState, useEffect, type JSX } from 'react'
 import { List, Button, Modal, message, Card } from 'antd'
 
+// Configuration de la route pour la liste des clients
 export const Route = createFileRoute('/clients/')({
   component: ClientsList,
 })
 
+// Type représentant un livre simplifié
 type Book = {
   id: string
   title: string
 }
 
+// Type représentant un client avec ses informations
 type Client = {
   id: string
   first_name: string
@@ -21,6 +30,7 @@ type Client = {
   nb_books_bought: number
 }
 
+// Données initiales par défaut (avant chargement de l'API)
 const initialClients: Client[] = [
   {
     id: '1',
@@ -51,13 +61,24 @@ const initialClients: Client[] = [
   },
 ]
 
+/**
+ * Composant principal affichant la liste des clients
+ * Gère l'affichage, la navigation et la suppression des clients
+ */
 function ClientsList(): JSX.Element {
+  // Hook de navigation pour rediriger vers d'autres pages
   const navigate = useNavigate()
+  // État contenant la liste des clients
   const [clients, setClients] = useState<Client[]>(initialClients)
+  // État pour contrôler l'affichage de la modale de suppression
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
+  // État contenant le client à supprimer
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null)
 
-  // Récupérer la liste des clients depuis le backend
+  /**
+   * Effet pour charger la liste des clients depuis l'API au montage
+   * Utilise un flag 'mounted' pour éviter les mises à jour après démontage
+   */
   useEffect(() => {
     let mounted: boolean = true
     const load = async (): Promise<void> => {
@@ -80,22 +101,37 @@ function ClientsList(): JSX.Element {
     }
   }, [])
 
-  // Navigation vers la page de détails
+  /**
+   * Navigation vers la page de détails d'un client
+   * @param clientId - L'identifiant du client à consulter
+   */
   const goToClientDetails = (clientId: string): void => {
     navigate({ to: '/clients/$clientId', params: { clientId } })
   }
 
-  // Navigation vers la page de création
+  /**
+   * Navigation vers la page de création d'un nouveau client
+   */
   const goToCreateClient = (): void => {
     navigate({ to: '/clients/create' })
   }
 
+  /**
+   * Gère le clic sur le bouton de suppression
+   * Empêche la propagation de l'événement et ouvre la modale de confirmation
+   * @param client - Le client à supprimer
+   * @param e - L'événement de clic
+   */
   const handleDeleteClick = (client: Client, e: React.MouseEvent): void => {
     e.stopPropagation()
     setClientToDelete(client)
     setShowDeleteModal(true)
   }
 
+  /**
+   * Confirme et exécute la suppression du client
+   * Envoie une requête DELETE à l'API puis met à jour la liste locale
+   */
   const confirmDelete = async (): Promise<void> => {
     if (!clientToDelete) return
 
@@ -122,8 +158,10 @@ function ClientsList(): JSX.Element {
     }
   }
 
+  // Rendu de la liste des clients
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      {/* Carte contenant la liste des clients */}
       <Card
         title="Liste des Clients"
         style={{
@@ -141,6 +179,7 @@ function ClientsList(): JSX.Element {
           </Button>
         }
       >
+        {/* Liste affichant chaque client avec bouton de suppression */}
         <List
           dataSource={clients}
           renderItem={(client: Client) => (
@@ -188,7 +227,7 @@ function ClientsList(): JSX.Element {
         />
       </Card>
 
-      {/* Modale de suppression */}
+      {/* Modale de confirmation de suppression */}
       <Modal
         title="Confirmer la suppression"
         open={showDeleteModal}
@@ -201,6 +240,7 @@ function ClientsList(): JSX.Element {
         cancelText="Annuler"
         okType="danger"
       >
+        {/* Message de confirmation avec nom du client */}
         <p>
           Êtes-vous sûr de vouloir supprimer le client{' '}
           <strong>
