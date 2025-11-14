@@ -8,6 +8,7 @@ import {
   EditOutlined,
 } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
+import { SafeImage } from '../../components/SafeImage'
 
 interface AuthorListItemProps {
   author: AuthorModel
@@ -51,6 +52,7 @@ export function AuthorListItem({
       }}
     >
       <Col span={10} style={{ margin: 'auto 0' }}>
+        <SafeImage src={author.pictureUrl} size={32} />
         {isEditing ? (
           <>
             <input

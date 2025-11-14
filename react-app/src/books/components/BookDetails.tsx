@@ -10,6 +10,7 @@ import {
 import { useBook } from '../providers/useBookDetailsProvider'
 import type { BookUpdatePayload } from '../BookModel'
 import { CreateBookModal } from './CreatePurchaseModal'
+import { SafeImage } from '../../components/SafeImage'
 
 export function BookDetails() {
   const {
@@ -156,6 +157,16 @@ export function BookDetails() {
             />
           )}
 
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '1rem',
+            }}
+          >
+            <SafeImage src={book.pictureUrl} size={120} />
+          </div>
+
           <Form
             form={form}
             layout="vertical"
@@ -253,7 +264,8 @@ export function BookDetails() {
           {/* acheteurs */}
           <div style={{ marginTop: '16px', color: 'white' }}>
             <p>
-              <strong>Clients ayant acheté ce livre :</strong> {book.nb_books_bought}
+              <strong>Clients ayant acheté ce livre :</strong>{' '}
+              {book.nb_books_bought}
             </p>
             {book.books_bought && book.books_bought.length > 0 && (
               <p>
@@ -265,7 +277,9 @@ export function BookDetails() {
 
           {book.photo_link && book.photo_link.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
+              <p style={{ color: 'white', marginBottom: '8px' }}>
+                Photo actuelle :
+              </p>
               <img
                 src={book.photo_link}
                 alt={`${book.first_name} ${book.last_name}`}
@@ -276,7 +290,7 @@ export function BookDetails() {
                   objectFit: 'cover',
                   border: '2px solid white',
                 }}
-                onError={(e) => {
+                onError={e => {
                   e.currentTarget.style.display = 'none'
                 }}
               />

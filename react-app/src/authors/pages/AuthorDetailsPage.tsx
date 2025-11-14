@@ -2,6 +2,7 @@ import { useAuthorDetailsProvider } from '../providers/useAuthorDetailsProvider'
 import { useBookProvider } from '../../books/providers/useBookProvider'
 import { Link } from '@tanstack/react-router'
 import { Input, Button } from 'antd'
+import { SafeImage } from '../../components/SafeImage'
 
 interface AuthorDetailsPageProps {
   authorId: string
@@ -41,10 +42,23 @@ export function AuthorDetailsPage({ authorId }: AuthorDetailsPageProps) {
   }
 
   return (
-    <div style={{ padding: '1rem' }}>
+    <div
+      style={{
+        padding: '1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
       <h2>
         {author.firstName} {author.lastName}
       </h2>
+
+      <SafeImage
+        src={author.pictureUrl}
+        size={120}
+        style={{ marginBottom: '1rem' }}
+      />
 
       <form onSubmit={onSubmit} style={{ maxWidth: '400px' }}>
         <label>Prénom</label>
