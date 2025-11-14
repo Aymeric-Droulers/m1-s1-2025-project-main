@@ -1,4 +1,10 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BookEntity } from '../books/entities/book.entity';
 
 export type AuthorId = string & { __brand: 'Author' };
