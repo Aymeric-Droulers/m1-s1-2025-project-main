@@ -5,7 +5,7 @@ import { Route as booksRoute } from './routes/books'
 import { Space, type MenuProps } from 'antd'
 import { BookOutlined, HomeOutlined, InfoOutlined } from '@ant-design/icons'
 import Menu from 'antd/es/menu/menu'
-import { Route as clientRoute } from './routes/ClientModel'
+import { Route as clientRoute } from './routes/clients/index'
 import { CiOutlined } from '@ant-design/icons'
 
 interface LayoutProps {
@@ -36,11 +36,11 @@ export function Layout({ children }: LayoutProps) {
       icon: <CiOutlined />,
     },
     {
-      //liste des clients
-      label: <Link to="/listeClient">Liste Client</Link>,
-      key: 'listeClient',
+      //creer un client
+      label: <Link to="/clients/create">Créer Client</Link>,
+      key: 'createClient',
       icon: <CiOutlined />,
-    }
+    },
   ]
 
   return (
