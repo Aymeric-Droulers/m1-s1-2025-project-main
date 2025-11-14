@@ -8,7 +8,6 @@ import {
   EditOutlined,
 } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
-import { SafeImage } from '../../components/SafeImage'
 
 interface BookListItemProps {
   book: BookModel
@@ -43,21 +42,13 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
         justifyContent: 'space-between',
       }}
     >
-      <Col
-        span={12}
-        style={{
-          margin: 'auto 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '.5rem',
-        }}
-      >
-        <SafeImage src={book.pictureUrl} size={32} />
+      {/* Titre + année */}
+      <Col span={12} style={{ margin: 'auto 0' }}>
         {isEditing ? (
           <input value={title} onChange={e => setTitle(e.target.value)} />
         ) : (
           <Link
-            to={`/books/$bookId`}
+            to="/books/$bookId"
             params={{ bookId: book.id }}
             style={{ margin: 'auto 0', textAlign: 'left' }}
           >
@@ -67,11 +58,17 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
         )}
       </Col>
 
+      {/* Auteur + nb vendus */}
       <Col span={9} style={{ margin: 'auto 0' }}>
         by <span style={{ fontWeight: 'bold' }}>{book.author.firstName}</span>{' '}
         <span style={{ fontWeight: 'bold' }}>{book.author.lastName}</span>
+        {' • '}
+        <span>
+          Vendu(s)&nbsp;: <strong>{book.soldCount ?? 0}</strong>
+        </span>
       </Col>
 
+      {/* Boutons actions */}
       <Col
         span={3}
         style={{
