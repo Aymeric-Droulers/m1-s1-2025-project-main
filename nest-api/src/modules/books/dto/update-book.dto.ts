@@ -1,4 +1,11 @@
-import { IsInt, IsOptional, IsString, IsUrl, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 
 export class UpdateBookDto {
   @IsString()

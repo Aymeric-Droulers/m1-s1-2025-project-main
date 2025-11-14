@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -21,17 +20,17 @@ import type { BookId } from './entities/book.entity';
 export class BooksController {
   constructor(private readonly svc: BooksService) {}
 
-  @Post()
+  @Post() // POST /books
   create(
-    @Body() dto: CreateBookDto,
-    @Query('authorId') authorIdQ?: string,
+    @Body() dto: CreateBookDto, // Request body validated as CreateBookDto
+    @Query('authorId') authorIdQ?: string, // Optional authorId passed as query parameter
   ): Promise<BookEntity> {
-    const authorId = dto.authorId ?? authorIdQ;
-    if (!authorId) throw new BadRequestException('authorId requis');
+    const authorId = dto.authorId ?? authorIdQ; // If there is an authorId in the body we use it, otherwise fall back to query parameter
+    if (!authorId) throw new BadRequestException('authorId requis'); // If there is no authorId at all, throw error
     return this.svc.create({ ...dto, authorId });
   }
 
-  @Get()
+  @Get() // GET /books
   async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -45,24 +44,32 @@ export class BooksController {
       authorId: authorId ?? undefined,
     });
 
-    return { books: res.items, total: res.total, page: res.page, limit: res.limit };
+    return {
+      books: res.items,
+      total: res.total,
+      page: res.page,
+      limit: res.limit,
+    };
   }
 
-  @Get(':id')
+  @Get(':id') // GET /books/:id
   findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: BookId) {
+    // Retrieve a single book by its UUID
     return this.svc.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(':id') // PATCH /books/:id
   update(
+    // Update part or all of a book data
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: BookId,
     @Body() dto: UpdateBookDto,
   ) {
     return this.svc.update(id, dto);
   }
 
-  @Delete(':id')
+  @Delete(':id') // DELETE /books/:id
   remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: BookId) {
+    // Delete a book
     return this.svc.remove(id);
   }
 }
