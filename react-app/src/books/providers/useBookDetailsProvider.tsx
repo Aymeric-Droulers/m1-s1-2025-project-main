@@ -67,7 +67,7 @@ export function BookProvider({ bookId, children }: BookProviderProps) {
 
   useEffect(() => {
     fetchBook()
-  }, [fetchBook])
+  }, [])
 
   const updateBook = useCallback(
     async (values: BookUpdatePayload) => {

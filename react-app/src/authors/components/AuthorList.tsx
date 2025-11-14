@@ -9,7 +9,7 @@ export function AuthorList() {
 
   useEffect(() => {
     loadAuthors()
-  }, [loadAuthors])
+  }, [])
 
   return (
     <>

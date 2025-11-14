@@ -9,7 +9,7 @@ export function BookList() {
 
   useEffect(() => {
     loadBooks()
-  }, [loadBooks])
+  }, [])
 
   return (
     <>

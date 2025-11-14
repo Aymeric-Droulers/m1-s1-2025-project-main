@@ -11,7 +11,7 @@ export function ClientList() {
   // Charger la liste des clients au montage
   useEffect(() => {
     loadClients()
-  }, [loadClients])
+  }, [])
 
   // État pour la modale de suppression
   const [showDeleteModal, setShowDeleteModal] = useState(false)
