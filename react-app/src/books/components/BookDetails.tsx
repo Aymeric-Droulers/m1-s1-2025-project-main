@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react'
-import { Form, Input, Button, Card, message, Spin, Alert } from 'antd'
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  message,
+  Spin,
+  Alert,
+  List,
+  Typography,
+} from 'antd'
 import {
   UserOutlined,
   MailOutlined,
   LinkOutlined,
   SaveOutlined,
   EditOutlined,
+  BookOutlined,
 } from '@ant-design/icons'
 import { useBook } from '../providers/useBookDetailsProvider'
 import type { BookUpdatePayload } from '../BookModel'
@@ -251,17 +262,25 @@ export function BookDetails() {
           </Form>
 
           {/* acheteurs */}
+
           <div style={{ marginTop: '16px', color: 'white' }}>
             <p>
-              <strong>Clients ayant acheté ce livre :</strong> {book.nb_books_bought}
+              <strong>Clients ayant acheté ce livre :</strong>{' '}
+              {book.achats ? book.achats.length : 0}
             </p>
-            {book.books_bought && book.books_bought.length > 0 && (
-              <p>
-                <strong>Dernier achat :</strong>{' '}
-                {book.books_bought[book.books_bought.length - 1]}
-              </p>
-            )}
+
+            {book.achats && book.achats.length > 0 && (
+              (() => {
+                const last = book.achats[book.achats.length - 1]
+                return (
+                  <p>
+                    <strong>Dernier achat :</strong>{' '}
+                    {last.first_name} {last.last_name} ({last.mail})
+                  </p>
+                )
+              })())}
           </div>
+
 
           {book.photo_link && book.photo_link.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>
@@ -282,7 +301,105 @@ export function BookDetails() {
               />
             </div>
           )}
+        </Card> 
+        
+
+
+        
+        
+        {/* Carte livres achetés */}
+        
+        <Card
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookOutlined />
+              <span>
+                Clients ayant acheté ce livre (
+                {book.achats ? book.achats.length : 0})
+              </span>
+            </div>
+          }
+          style={{
+            backgroundColor: '#808080',
+            border: '2px solid #000',
+            borderRadius: '8px',
+          }}
+          bodyStyle={{
+            backgroundColor: '#808080',
+            padding: '24px',
+          }}
+        >
+          {book.achats && book.achats.length > 0 ? (
+            <List
+              dataSource={book.achats}
+              renderItem={(client) => (
+                <List.Item
+                  key={client.id}
+                  style={{
+                    backgroundColor: '#808080',
+                    borderBottom: '1px solid #000',
+                    padding: '16px 0',
+                  }}
+                >
+                  <List.Item.Meta
+                    avatar={
+                      client.photo_link ? (
+                        <img
+                          src={client.photo_link}
+                          alt={`${client.first_name} ${client.last_name}`}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <UserOutlined style={{ fontSize: 24, color: 'white' }} />
+                      )
+                    }
+                    title={
+                      <Typography.Text strong style={{ color: 'white', fontSize: '16px' }}>
+                        {client.first_name} {client.last_name}
+                      </Typography.Text>
+                    }
+                    description={
+                      <div style={{ color: '#f0f0f0' }}>
+                        <div>{client.mail}</div>
+                        <div>
+                          Achat(s) : {client.nb_books_bought}
+                        </div>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
+              <BookOutlined
+                style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}
+              />
+              <div>Aucun achat pour ce livre</div>
+              <Typography.Text type="secondary" style={{ color: '#f0f0f0' }}>
+                Ce livre n&apos;a pas encore été acheté
+              </Typography.Text>
+            </div>
+          )}
         </Card>
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
             Retour

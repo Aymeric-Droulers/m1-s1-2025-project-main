@@ -1,9 +1,12 @@
+import type { ClientModel } from '../clients/ClientModel.tsx'
+
 export type BookModel = {
   id: string
   title: string
   yearPublished: number
   description: string
   pictureUrl: string
+  achats: ClientModel[]
   author: {
     id: string
     firstName: string

@@ -33,14 +33,27 @@ export function BookProvider({ bookId, children }: BookProviderProps) {
       setLoading(true)
       setError(null)
 
-      const res = await fetch(`http://localhost:3000/books/${bookId}`)
+      const [bookRes, clientsRes] = await Promise.all([
+        fetch(`http://localhost:3000/books/${bookId}`),
+        fetch(`http://localhost:3000/clients/byBook/${bookId}`),
+      ])
 
-      if (!res.ok) {
-        throw new Error(`Livre non trouvé (${res.status})`)
+      if (!bookRes.ok) {
+        throw new Error(`Livre non trouvé (${bookRes.status})`)
+      }
+      if (!clientsRes.ok) {
+        throw new Error(
+          `Erreur lors du chargement des clients (${clientsRes.status})`,
+        )
       }
 
-      const data = await res.json()
-      setBook(data)
+      const bookData = await bookRes.json()
+      const clientsData = await clientsRes.json()
+      //setBook(data)
+      setBook({
+        ...bookData,
+        achats: clientsData,
+      })
     } catch (err) {
       setError(
         err instanceof Error
@@ -111,6 +124,7 @@ export function BookProvider({ bookId, children }: BookProviderProps) {
         payload,
       )
       console.log("Réponse de l'API:", response)
+      await fetchBook() //on recharge les acheteurs
     } catch (err) {
       console.error("Erreur lors de l'achat:", err)
     }
