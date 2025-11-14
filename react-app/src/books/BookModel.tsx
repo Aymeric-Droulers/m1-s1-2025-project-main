@@ -17,4 +17,12 @@ export type CreateBookModel = {
   yearPublished: number
 }
 
+//types de useBookProvider
+export type BookUpdatePayload = {
+  title: string
+  yearPublished: string
+  description: string
+  pictureUrl?: string
+}
+
 export type UpdateBookModel = Partial<CreateBookModel>
