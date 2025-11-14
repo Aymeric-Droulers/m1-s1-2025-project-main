@@ -17,6 +17,13 @@ export type CreateBookModel = {
   yearPublished: number
 }
 
+//type de useBookPurshaseProvider
+export type PurchaseModel = {
+  clientId: string
+  bookId: string
+  date: number
+}
+
 //types de useBookProvider
 export type BookUpdatePayload = {
   title: string
@@ -32,6 +39,7 @@ export type BookContextValue = {
   apiError: string | null
   updateBook: (values: BookUpdatePayload) => Promise<void>
   clearApiError: () => void
+  purchaseBook: (payload: PurchaseModel) => Promise<void>
 }
 
 export type UpdateBookModel = Partial<CreateBookModel>
