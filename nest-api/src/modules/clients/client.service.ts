@@ -8,7 +8,6 @@ import { CreateSellModel } from './models/createSell.model';
 import { AllClientsModel } from './models/allClients.model';
 import { ClientEntity } from './entities/client.entity';
 import { SellsEntity } from './entities/sells.entity';
-import { BookEntity } from '../books/entities/book.entity';
 import { BookModel } from '../books/book.model';
 
 @Injectable()
