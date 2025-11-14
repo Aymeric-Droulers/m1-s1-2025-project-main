@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CreateAuthorModel } from '../AuthorModel'
 import { Button, Input, Modal, Space } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import { SafeImage } from '../../components/SafeImage'
 
 interface CreateAuthorModalProps {
   onCreate: (author: CreateAuthorModel) => void
@@ -66,6 +67,7 @@ export function CreateAuthorModal({ onCreate }: CreateAuthorModalProps) {
             value={pictureUrl}
             onChange={e => setPictureUrl(e.target.value)}
           />
+          <SafeImage src={pictureUrl} size={80} />
         </Space>
       </Modal>
     </>

@@ -21,6 +21,7 @@ import {
 import { useBook } from '../providers/useBookDetailsProvider'
 import type { BookUpdatePayload } from '../BookModel'
 import { CreateBookModal } from './CreatePurchaseModal'
+import { SafeImage } from '../../components/SafeImage'
 
 export function BookDetails() {
   const {
@@ -167,6 +168,16 @@ export function BookDetails() {
             />
           )}
 
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '1rem',
+            }}
+          >
+            <SafeImage src={book.pictureUrl} size={120} />
+          </div>
+
           <Form
             form={form}
             layout="vertical"
@@ -277,6 +288,20 @@ export function BookDetails() {
             )}
           </div>
           {book.pictureUrl && book.pictureUrl.trim() !== '' && (
+            {book.achats &&
+              book.achats.length > 0 &&
+              (() => {
+                const last = book.achats[book.achats.length - 1]
+                return (
+                  <p>
+                    <strong>Dernier achat :</strong> {last.first_name}{' '}
+                    {last.last_name} ({last.mail})
+                  </p>
+                )
+              })()}
+          </div>
+
+          {book.photo_link && book.photo_link.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>
               <p style={{ color: 'white', marginBottom: '8px' }}>
                 Photo actuelle :
@@ -300,6 +325,7 @@ export function BookDetails() {
         </Card>
 
         {/* Carte livres achetés */}
+
         <Card
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -383,6 +409,7 @@ export function BookDetails() {
             </div>
           )}
         </Card>
+
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
             Retour
