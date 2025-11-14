@@ -1,110 +1,227 @@
+import { useEffect } from 'react'
 import { useAuthorDetailsProvider } from '../providers/useAuthorDetailsProvider'
 import { useBookProvider } from '../../books/providers/useBookProvider'
 import { Link } from '@tanstack/react-router'
-import { Input, Button } from 'antd'
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Spin,
+  Alert,
+  Typography,
+  message,
+} from 'antd'
 import { SafeImage } from '../../components/SafeImage'
+
+const { Title, Text } = Typography
 
 interface AuthorDetailsPageProps {
   authorId: string
+}
+
+type AuthorFormValues = {
+  firstName: string
+  lastName: string
+  pictureUrl?: string
 }
 
 export function AuthorDetailsPage({ authorId }: AuthorDetailsPageProps) {
   const { author, loading, error, updateAuthor } =
     useAuthorDetailsProvider(authorId)
   const { books, loadBooks } = useBookProvider()
+  const [form] = Form.useForm<AuthorFormValues>()
 
-  // s'assurer que les livres sont chargés
-  if (!books.length) {
-    loadBooks()
-  }
+  // Charger les livres s'ils ne sont pas encore récupérés
+  useEffect(() => {
+    if (!books.length) {
+      loadBooks()
+    }
+  }, [books.length, loadBooks])
 
-  if (loading || !author) {
-    return <p>Chargement…</p>
+  // Remplir le formulaire lorsque l'auteur est chargé
+  useEffect(() => {
+    if (author) {
+      form.setFieldsValue({
+        firstName: author.firstName,
+        lastName: author.lastName,
+        pictureUrl: author.pictureUrl ?? '',
+      })
+    }
+  }, [author, form])
+
+  if (loading && !author) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '2rem',
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    )
   }
 
   if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>
+    return (
+      <div style={{ maxWidth: 800, margin: '24px auto', padding: '0 16px' }}>
+        <Alert
+          type="error"
+          message="Erreur lors du chargement de l’auteur"
+          description={error}
+        />
+      </div>
+    )
+  }
+
+  if (!author) {
+    return (
+      <div style={{ maxWidth: 800, margin: '24px auto', padding: '0 16px' }}>
+        <Alert
+          type="warning"
+          message="Auteur introuvable"
+          description="L’auteur demandé n’existe pas."
+        />
+      </div>
+    )
   }
 
   const booksByAuthor = books.filter(book => book.author.id === author.id)
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const firstName = String(formData.get('firstName') ?? '')
-    const lastName = String(formData.get('lastName') ?? '')
-    const pictureUrl = String(formData.get('pictureUrl') ?? '')
-    void updateAuthor({
-      firstName,
-      lastName,
-      pictureUrl: pictureUrl || undefined,
-    })
+  const handleSave = async (values: AuthorFormValues) => {
+    try {
+      await updateAuthor({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        pictureUrl: values.pictureUrl || undefined,
+      })
+      message.success('Auteur mis à jour avec succès')
+    } catch (e) {
+      message.error("Erreur lors de la mise à jour de l'auteur", e)
+    }
   }
 
   return (
     <div
       style={{
-        padding: '1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        maxWidth: 800,
+        margin: '24px auto',
+        padding: '0 16px',
       }}
     >
-      <h2>
-        {author.firstName} {author.lastName}
-      </h2>
+      <Card>
+        {/* En-tête avec image + infos */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '16px',
+            marginBottom: '16px',
+            alignItems: 'center',
+          }}
+        >
+          <SafeImage src={author.pictureUrl} size={100} />
+          <div style={{ flex: 1 }}>
+            <Title level={3} style={{ marginBottom: 0 }}>
+              {author.firstName} {author.lastName}
+            </Title>
+            <Text type="secondary">Auteur</Text>
 
-      <SafeImage
-        src={author.pictureUrl}
-        size={120}
-        style={{ marginBottom: '1rem' }}
-      />
+            <div style={{ marginTop: '12px' }}>
+              <div>
+                <Text>Nombre de livres : </Text>
+                <Text strong>{author.booksCount}</Text>
+              </div>
+              <div>
+                <Text>Nombre moyen de ventes : </Text>
+                <Text strong>{author.averageSalesPerBook.toFixed(2)}</Text>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <form onSubmit={onSubmit} style={{ maxWidth: '400px' }}>
-        <label>Prénom</label>
-        <Input
-          name="firstName"
-          defaultValue={author.firstName}
-          style={{ marginBottom: '.5rem' }}
-        />
-        <label>Nom</label>
-        <Input
-          name="lastName"
-          defaultValue={author.lastName}
-          style={{ marginBottom: '.5rem' }}
-        />
-        <label>Photo (URL)</label>
-        <Input
-          name="pictureUrl"
-          defaultValue={author.pictureUrl ?? ''}
-          style={{ marginBottom: '.5rem' }}
-        />
-        <Button type="primary" htmlType="submit">
-          Mettre à jour
-        </Button>
-      </form>
+        {/* Formulaire de mise à jour */}
+        <Form<AuthorFormValues>
+          form={form}
+          layout="vertical"
+          onFinish={handleSave}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Prénom"
+            name="firstName"
+            rules={[{ required: true, message: 'Veuillez saisir le prénom' }]}
+          >
+            <Input placeholder="Prénom" />
+          </Form.Item>
 
-      <p style={{ marginTop: '1rem' }}>
-        Nombre de livres : <b>{author.booksCount}</b>
-      </p>
-      <p>
-        Nombre moyen de ventes : <b>{author.averageSalesPerBook.toFixed(2)}</b>
-      </p>
+          <Form.Item
+            label="Nom"
+            name="lastName"
+            rules={[{ required: true, message: 'Veuillez saisir le nom' }]}
+          >
+            <Input placeholder="Nom" />
+          </Form.Item>
 
-      <h3 style={{ marginTop: '1rem' }}>Livres de cet auteur</h3>
-      {booksByAuthor.length === 0 ? (
-        <p>Aucun livre pour cet auteur.</p>
-      ) : (
-        <ul>
-          {booksByAuthor.map(book => (
-            <li key={book.id}>
-              <Link to="/books/$bookId" params={{ bookId: book.id }}>
-                {book.title} — {book.yearPublished}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+          <Form.Item label="URL de la photo" name="pictureUrl">
+            <Input placeholder="https://..." />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Enregistrer les modifications
+            </Button>
+          </Form.Item>
+        </Form>
+
+        {/* Liste des livres de l'auteur */}
+        <div style={{ marginTop: '24px' }}>
+          <Title level={4} style={{ marginBottom: '8px' }}>
+            Livres de cet auteur
+          </Title>
+
+          {booksByAuthor.length === 0 ? (
+            <Text type="secondary">Aucun livre pour cet auteur.</Text>
+          ) : (
+            <ul style={{ paddingLeft: '16px' }}>
+              {booksByAuthor.map(book => (
+                <li key={book.id}>
+                  <Link to="/books/$bookId" params={{ bookId: book.id }}>
+                    {book.title} — {book.yearPublished}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Boutons bas de page (comme BookDetails) */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginTop: '24px',
+          }}
+        >
+          <Button
+            onClick={() => {
+              window.history.back()
+            }}
+            style={{ flex: 1 }}
+          >
+            Retour
+          </Button>
+          <Button
+            onClick={() => {
+              window.location.href = '/authors'
+            }}
+            style={{ flex: 1 }}
+          >
+            Liste des auteurs
+          </Button>
+        </div>
+      </Card>
     </div>
   )
 }
