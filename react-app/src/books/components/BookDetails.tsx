@@ -272,6 +272,7 @@ export function BookDetails() {
             )}
           </Form>
 
+          {/* Infos acheteurs */}
           <div style={{ marginTop: '16px', color: 'white' }}>
             <p>
               <strong>Clients ayant acheté ce livre :</strong>{' '}
@@ -282,24 +283,12 @@ export function BookDetails() {
               <p>
                 <strong>Dernier achat :</strong>{' '}
                 {book.achats[book.achats.length - 1].first_name}{' '}
-                {book.achats[book.achats.length - 1].last_name}
+                {book.achats[book.achats.length - 1].last_name}{' '}
                 ({book.achats[book.achats.length - 1].mail})
               </p>
             )}
           </div>
-          {book.pictureUrl && book.pictureUrl.trim() !== '' && (
-            {book.achats &&
-              book.achats.length > 0 &&
-              (() => {
-                const last = book.achats[book.achats.length - 1]
-                return (
-                  <p>
-                    <strong>Dernier achat :</strong> {last.first_name}{' '}
-                    {last.last_name} ({last.mail})
-                  </p>
-                )
-              })()}
-          </div>
+
 
           {book.photo_link && book.photo_link.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>
@@ -409,7 +398,6 @@ export function BookDetails() {
             </div>
           )}
         </Card>
-
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
             Retour
