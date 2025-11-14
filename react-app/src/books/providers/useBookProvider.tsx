@@ -21,10 +21,9 @@ export const useBookProvider = () => {
       const res = await axios.get('http://localhost:3000/books')
 
       const payload = res.data
-      const list =
-        Array.isArray(payload)
-          ? payload
-          : payload.books ?? payload.items ?? payload.data ?? []
+      const list = Array.isArray(payload)
+        ? payload
+        : (payload.books ?? payload.items ?? payload.data ?? [])
 
       // pour chaque livre, on va chercher les ventes
       const booksWithSales = await Promise.all(
