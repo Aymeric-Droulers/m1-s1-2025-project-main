@@ -1,37 +1,29 @@
-import { useEffect, useState } from 'react'
-
-import { useClientProvider } from '../providers/useClientProvider.tsx'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { Button, Card, List, Modal } from 'antd'
-import type { ClientModel } from '../ClientModel.tsx'
 import { Link } from '@tanstack/react-router'
 
-export function ClientList() {
-  const { clients, loadClients, createClient, updateClient, deleteClient } =
-    useClientProvider()
+import { useClientProvider } from '../providers/useClientProvider.tsx'
+import type { ClientModel } from '../ClientModel.tsx'
 
+export function ClientList() {
+  const { clients, loadClients, deleteClient } = useClientProvider()
+
+  // Charger la liste des clients au montage
   useEffect(() => {
     loadClients()
   }, [loadClients])
 
-  // État pour contrôler l'affichage de la modale de suppression
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
-  // État contenant le client à supprimer
+  // État pour la modale de suppression
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [clientToDelete, setClientToDelete] = useState<ClientModel | null>(null)
 
-
-
-
-
-
   /**
-   * Gère le clic sur le bouton de suppression
-   * Empêche la propagation de l'événement et ouvre la modale de confirmation
-   * @param client - Le client à supprimer
-   * @param e - L'événement de clic
+   * Clic sur le bouton "Supprimer"
+   * On stoppe la propagation pour ne pas déclencher le clic sur le lien
    */
   const handleDeleteClick = (
     client: ClientModel,
-    e: React.MouseEvent,
+    e: MouseEvent<HTMLButtonElement>,
   ): void => {
     e.stopPropagation()
     setClientToDelete(client)
@@ -39,12 +31,21 @@ export function ClientList() {
   }
 
   /**
-   * Confirme et exécute la suppression du client
-   * Envoie une requête DELETE à l'API puis met à jour la liste locale
+   * Confirme la suppression
    */
-  const confirmDelete = async (): Promise<void> => {
+  const confirmDelete = (): void => {
     if (!clientToDelete) return
     deleteClient(clientToDelete.id)
+    setShowDeleteModal(false)
+    setClientToDelete(null)
+  }
+
+  /**
+   * Annule la suppression
+   */
+  const cancelDelete = (): void => {
+    setShowDeleteModal(false)
+    setClientToDelete(null)
   }
 
   return (
@@ -63,25 +64,23 @@ export function ClientList() {
         }}
         extra={
           <Link
-            to={`/clients/create`}
-            style={{ margin: 'auto 0', textAlign: 'left' }}
+            to="/clients/create"
+            style={{ margin: 'auto 0', textAlign: 'left', color: 'white' }}
           >
-            Create a client
+            Créer un client
           </Link>
         }
       >
-        {/* Liste affichant chaque client avec bouton de suppression */}
         <List
           dataSource={clients}
+          style={{ backgroundColor: '#808080' }}
           renderItem={(client: ClientModel) => (
             <List.Item
               actions={[
                 <Button
                   key="delete"
                   danger
-                  onClick={(e: React.MouseEvent): void =>
-                    handleDeleteClick(client, e)
-                  }
+                  onClick={(e): void => handleDeleteClick(client, e)}
                 >
                   Supprimer
                 </Button>,
@@ -95,7 +94,9 @@ export function ClientList() {
             >
               <List.Item.Meta
                 title={
-                  <span
+                  <Link
+                    to="/clients/$clientId"
+                    params={{ clientId: client.id }}
                     style={{
                       color: 'white',
                       fontSize: '16px',
@@ -103,7 +104,7 @@ export function ClientList() {
                     }}
                   >
                     {client.first_name} {client.last_name}
-                  </span>
+                  </Link>
                 }
                 description={
                   <span style={{ color: 'white' }}>
@@ -113,7 +114,6 @@ export function ClientList() {
               />
             </List.Item>
           )}
-          style={{ backgroundColor: '#808080' }}
         />
       </Card>
 
@@ -122,15 +122,11 @@ export function ClientList() {
         title="Confirmer la suppression"
         open={showDeleteModal}
         onOk={confirmDelete}
-        onCancel={(): void => {
-          setShowDeleteModal(false)
-          setClientToDelete(null)
-        }}
+        onCancel={cancelDelete}
         okText="Supprimer"
         cancelText="Annuler"
         okType="danger"
       >
-        {/* Message de confirmation avec nom du client */}
         <p>
           Êtes-vous sûr de vouloir supprimer le client{' '}
           <strong>
