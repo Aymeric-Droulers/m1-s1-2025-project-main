@@ -23,8 +23,8 @@ export const useBreadcrumbProvider = () => {
       baseItems.push({ title: <a href="/books">Books</a> })
     }
 
-    if (segment === 'client' || segment === 'listeClient') {
-      baseItems.push({ title: <a href="/listeClient">Clients</a> })
+    if (segment === 'client' || segment === 'clients') {
+      baseItems.push({ title: <a href="/clients">Clients</a> })
     }
 
     if (segment === 'authors') {

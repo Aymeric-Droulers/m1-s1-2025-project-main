@@ -272,8 +272,7 @@ export function BookDetails() {
             )}
           </Form>
 
-          {/* acheteurs */}
-
+          {/* Infos acheteurs */}
           <div style={{ marginTop: '16px', color: 'white' }}>
             <p>
               <strong>Clients ayant acheté ce livre :</strong>{' '}
@@ -318,6 +317,28 @@ export function BookDetails() {
                 )
               })()}
           </div>
+
+          {book.photo_link && book.photo_link.trim() !== '' && (
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <p style={{ color: 'white', marginBottom: '8px' }}>
+                Photo actuelle :
+              </p>
+              <img
+                src={book.photo_link}
+                alt={`${book.first_name} ${book.last_name}`}
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid white',
+                }}
+                onError={e => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
         </Card>
 
         {/* Carte livres achetés */}
@@ -405,7 +426,6 @@ export function BookDetails() {
             </div>
           )}
         </Card>
-
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
             Retour
