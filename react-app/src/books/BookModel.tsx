@@ -8,6 +8,7 @@ export type BookModel = {
   description: string
   pictureUrl: string
   achats: ClientModel[]
+  soldCount: number
   author: {
     id: string
     firstName: string
