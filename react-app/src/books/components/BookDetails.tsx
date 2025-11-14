@@ -284,11 +284,10 @@ export function BookDetails() {
                 <strong>Dernier achat :</strong>{' '}
                 {book.achats[book.achats.length - 1].first_name}{' '}
                 {book.achats[book.achats.length - 1].last_name}{' '}
-                ({book.achats[book.achats.length - 1].mail})
+                {book.achats[book.achats.length - 1].mail})
               </p>
             )}
           </div>
-
 
           {book.photo_link && book.photo_link.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>

@@ -1,6 +1,7 @@
 import type { ClientModel } from '../clients/ClientModel.tsx'
 
 export type BookModel = {
+  photo_link: string
   id: string
   title: string
   yearPublished: number
