@@ -64,7 +64,7 @@ export const useBreadcrumbProvider = () => {
       return
     }
 
-    if (segment === 'client') {
+    if (segment === 'clients') {
       axios
         .get(`http://localhost:3000/clients/${id}`)
         .then(res => {
