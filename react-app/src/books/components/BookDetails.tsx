@@ -317,28 +317,6 @@ export function BookDetails() {
                 )
               })()}
           </div>
-
-          {book.photo_link && book.photo_link.trim() !== '' && (
-            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <p style={{ color: 'white', marginBottom: '8px' }}>
-                Photo actuelle :
-              </p>
-              <img
-                src={book.photo_link}
-                alt={`${book.first_name} ${book.last_name}`}
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid white',
-                }}
-                onError={e => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-            </div>
-          )}
         </Card>
 
         {/* Carte livres achetés */}
