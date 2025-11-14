@@ -261,8 +261,6 @@ export function BookDetails() {
             )}
           </Form>
 
-          {/* acheteurs */}
-
           <div style={{ marginTop: '16px', color: 'white' }}>
             <p>
               <strong>Clients ayant acheté ce livre :</strong>{' '}
@@ -270,24 +268,22 @@ export function BookDetails() {
             </p>
 
             {book.achats && book.achats.length > 0 && (
-              (() => {
-                const last = book.achats[book.achats.length - 1]
-                return (
-                  <p>
-                    <strong>Dernier achat :</strong>{' '}
-                    {last.first_name} {last.last_name} ({last.mail})
-                  </p>
-                )
-              })())}
+              <p>
+                <strong>Dernier achat :</strong>{' '}
+                {book.achats[book.achats.length - 1].first_name}{' '}
+                {book.achats[book.achats.length - 1].last_name}
+                ({book.achats[book.achats.length - 1].mail})
+              </p>
+            )}
           </div>
-
-
-          {book.photo_link && book.photo_link.trim() !== '' && (
+          {book.pictureUrl && book.pictureUrl.trim() !== '' && (
             <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
+              <p style={{ color: 'white', marginBottom: '8px' }}>
+                Photo actuelle :
+              </p>
               <img
-                src={book.photo_link}
-                alt={`${book.first_name} ${book.last_name}`}
+                src={book.pictureUrl}
+                alt={`${book.title}`}
                 style={{
                   width: '100px',
                   height: '100px',
@@ -295,20 +291,15 @@ export function BookDetails() {
                   objectFit: 'cover',
                   border: '2px solid white',
                 }}
-                onError={(e) => {
+                onError={e => {
                   e.currentTarget.style.display = 'none'
                 }}
               />
             </div>
           )}
-        </Card> 
-        
+        </Card>
 
-
-        
-        
         {/* Carte livres achetés */}
-        
         <Card
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -332,7 +323,7 @@ export function BookDetails() {
           {book.achats && book.achats.length > 0 ? (
             <List
               dataSource={book.achats}
-              renderItem={(client) => (
+              renderItem={client => (
                 <List.Item
                   key={client.id}
                   style={{
@@ -355,20 +346,23 @@ export function BookDetails() {
                           }}
                         />
                       ) : (
-                        <UserOutlined style={{ fontSize: 24, color: 'white' }} />
+                        <UserOutlined
+                          style={{ fontSize: 24, color: 'white' }}
+                        />
                       )
                     }
                     title={
-                      <Typography.Text strong style={{ color: 'white', fontSize: '16px' }}>
+                      <Typography.Text
+                        strong
+                        style={{ color: 'white', fontSize: '16px' }}
+                      >
                         {client.first_name} {client.last_name}
                       </Typography.Text>
                     }
                     description={
                       <div style={{ color: '#f0f0f0' }}>
                         <div>{client.mail}</div>
-                        <div>
-                          Achat(s) : {client.nb_books_bought}
-                        </div>
+                        <div>Achat(s) : {client.nb_books_bought}</div>
                       </div>
                     }
                   />
@@ -376,7 +370,9 @@ export function BookDetails() {
               )}
             />
           ) : (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
+            <div
+              style={{ textAlign: 'center', padding: '40px', color: 'white' }}
+            >
               <BookOutlined
                 style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}
               />
@@ -387,19 +383,6 @@ export function BookDetails() {
             </div>
           )}
         </Card>
-
-
-
-
-
-
-
-
-
-
-
-
-
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
           <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
             Retour
