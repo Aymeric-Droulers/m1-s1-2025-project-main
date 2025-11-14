@@ -10,6 +10,7 @@ import {
   EditOutlined,
 } from '@ant-design/icons'
 import { useBook } from '../providers/useBookDetailsProvider'
+import type { BookUpdatePayload } from '../BookModel'
 
 export function BookDetails() {
   const { book, loading, error, saving, apiError, updateBook, clearApiError } =
@@ -30,7 +31,7 @@ export function BookDetails() {
     }
   }, [book, form])
 
-  const handleSave = async (values: any) => {
+  const handleSave = async (values: BookUpdatePayload) => {
     try {
       await updateBook(values)
       setEditing(false)
