@@ -325,7 +325,7 @@ export function BookDetails() {
               </p>
               <img
                 src={book.photo_link}
-                alt={`${book.first_name} ${book.last_name}`}
+                alt={book.title}
                 style={{
                   width: '100px',
                   height: '100px',
