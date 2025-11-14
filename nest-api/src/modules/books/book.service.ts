@@ -21,9 +21,10 @@ type FindAllArgs = {
 export class BooksService {
   constructor(
     @InjectRepository(BookEntity)
-    private readonly repo: Repository<BookEntity>,
+    private readonly repo: Repository<BookEntity>, // TypeORM repository for BookEntity
   ) {}
 
+  // Create a new book linked to an existing author
   async create(dto: {
     title: string;
     description?: string;
@@ -33,22 +34,25 @@ export class BooksService {
   }) {
     const { authorId, ...rest } = dto;
     const entity = this.repo.create({
+      // Build a new BookEntity
       ...rest,
-      author: { id: authorId } as AuthorEntity,
+      author: { id: authorId } as AuthorEntity, // Link to existing author by ID
     });
     return this.repo.save(entity);
   }
 
   async findAll({ page = 1, limit = 10, search, authorId }: FindAllArgs) {
-    const where: FindOptionsWhere<BookEntity> = {};
-    if (search) where.title = Like(`%${search}%`);
+    // Retrieve paginated list of books with optional search and author filter
+    const where: FindOptionsWhere<BookEntity> = {}; // Build the WHERE clause
+    if (search) where.title = Like(`%${search}%`); // Filter by title if search provided
     if (authorId)
-      where.author = { id: authorId } as FindOptionsWhere<AuthorEntity>;
+      where.author = { id: authorId } as FindOptionsWhere<AuthorEntity>; // Filter by authorId if provided
 
     const [items, total] = await this.repo.findAndCount({
+      // We use findAndCount to get items and total count
       where,
-      relations: { author: true }, // <-- brings back author
-      order: { title: 'ASC', id: 'ASC' }, // match old query ordering
+      relations: { author: true },
+      order: { title: 'ASC', id: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -57,6 +61,7 @@ export class BooksService {
   }
 
   async findOne(id: BookId): Promise<BookEntity> {
+    // Retrieve a single book by its ID
     const book = await this.repo.findOne({
       where: { id },
       relations: { author: true },
@@ -66,6 +71,7 @@ export class BooksService {
   }
 
   async update(id: BookId, dto: UpdateBookDto): Promise<BookEntity> {
+    // Update an existing book with partial data
     const existing = await this.findOne(id);
 
     const patch: Partial<BookEntity> & { author?: AuthorEntity | null } = {
