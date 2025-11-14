@@ -8,6 +8,7 @@ import {
   EditOutlined,
 } from '@ant-design/icons'
 import { Link } from '@tanstack/react-router'
+import { SafeImage } from '../../components/SafeImage'
 
 interface BookListItemProps {
   book: BookModel
@@ -42,7 +43,16 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
         justifyContent: 'space-between',
       }}
     >
-      <Col span={12} style={{ margin: 'auto 0' }}>
+      <Col
+        span={12}
+        style={{
+          margin: 'auto 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '.5rem',
+        }}
+      >
+        <SafeImage src={book.pictureUrl} size={32} />
         {isEditing ? (
           <input value={title} onChange={e => setTitle(e.target.value)} />
         ) : (
@@ -51,7 +61,8 @@ export function BookListItem({ book, onDelete, onUpdate }: BookListItemProps) {
             params={{ bookId: book.id }}
             style={{ margin: 'auto 0', textAlign: 'left' }}
           >
-            <span style={{ fontWeight: 'bold' }}>{book.title}</span> — {book.yearPublished}
+            <span style={{ fontWeight: 'bold' }}>{book.title}</span> —{' '}
+            {book.yearPublished}
           </Link>
         )}
       </Col>

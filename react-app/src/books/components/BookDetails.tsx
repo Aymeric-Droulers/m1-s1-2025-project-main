@@ -279,14 +279,43 @@ export function BookDetails() {
               {book.achats ? book.achats.length : 0}
             </p>
 
-            {book.achats && book.achats.length > 0 && (
-              <p>
-                <strong>Dernier achat :</strong>{' '}
-                {book.achats[book.achats.length - 1].first_name}{' '}
-                {book.achats[book.achats.length - 1].last_name}{' '}
-                {book.achats[book.achats.length - 1].mail})
-              </p>
-            )}
+            {book.achats &&
+              book.achats.length > 0 &&
+              (() => {
+                const last = book.achats[book.achats.length - 1]
+                return (
+                  <p
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {last.photo_link ? (
+                      <img
+                        src={last.photo_link}
+                        alt={`${last.first_name} ${last.last_name}`}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                        }}
+                        onError={e => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    ) : (
+                      <UserOutlined style={{ fontSize: 24, color: 'white' }} />
+                    )}
+                    <span>
+                      <strong>Dernier achat :</strong> {last.first_name}{' '}
+                      {last.last_name} ({last.mail})
+                    </span>
+                  </p>
+                )
+              })()}
           </div>
 
           {book.photo_link && book.photo_link.trim() !== '' && (
@@ -295,8 +324,7 @@ export function BookDetails() {
                 Photo actuelle :
               </p>
               <img
-                src={book.pictureUrl}
-                alt={`${book.title}`}
+                src={book.photo_link}
                 style={{
                   width: '100px',
                   height: '100px',
