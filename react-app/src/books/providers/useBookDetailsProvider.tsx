@@ -5,11 +5,13 @@ import {
   useEffect,
   useCallback,
 } from 'react'
+import axios from 'axios'
 import type { ReactNode } from 'react'
 import type {
   BookModel,
   BookUpdatePayload,
   BookContextValue,
+  PurchaseModel,
 } from '../BookModel'
 
 const BookContext = createContext<BookContextValue | undefined>(undefined)
@@ -101,6 +103,19 @@ export function BookProvider({ bookId, children }: BookProviderProps) {
     [bookId, fetchBook],
   )
 
+  const purchaseBook = useCallback(async (payload: PurchaseModel) => {
+    console.log("Détails de l'achat:", payload)
+    try {
+      const response = await axios.post(
+        'http://localhost:3000/clients/buyBook',
+        payload,
+      )
+      console.log("Réponse de l'API:", response)
+    } catch (err) {
+      console.error("Erreur lors de l'achat:", err)
+    }
+  }, [])
+
   const clearApiError = () => setApiError(null)
 
   const value: BookContextValue = {
@@ -111,6 +126,7 @@ export function BookProvider({ bookId, children }: BookProviderProps) {
     apiError,
     updateBook,
     clearApiError,
+    purchaseBook,
   }
 
   return <BookContext.Provider value={value}>{children}</BookContext.Provider>

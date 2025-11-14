@@ -1,5 +1,3 @@
-// BookDetails.tsx
-
 import { useState, useEffect } from 'react'
 import { Form, Input, Button, Card, message, Spin, Alert } from 'antd'
 import {
@@ -8,13 +6,23 @@ import {
   LinkOutlined,
   SaveOutlined,
   EditOutlined,
+  BookOutlined,
 } from '@ant-design/icons'
 import { useBook } from '../providers/useBookDetailsProvider'
 import type { BookUpdatePayload } from '../BookModel'
+import { CreateBookModal } from './CreatePurchaseModal'
 
 export function BookDetails() {
-  const { book, loading, error, saving, apiError, updateBook, clearApiError } =
-    useBook()
+  const {
+    book,
+    loading,
+    error,
+    saving,
+    apiError,
+    updateBook,
+    clearApiError,
+    purchaseBook,
+  } = useBook()
 
   const [editing, setEditing] = useState(false)
   const [form] = Form.useForm()
@@ -93,196 +101,329 @@ export function BookDetails() {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
-      <Card
-        title={`Détails du Livre ${editing ? '(Modification)' : ''}`}
-        extra={
-          !editing ? (
-            <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
-              Modifier
-            </Button>
-          ) : null
-        }
-        style={{
-          backgroundColor: '#808080',
-          border: '2px solid #000',
-          borderRadius: '8px',
-        }}
-        bodyStyle={{
-          backgroundColor: '#808080',
-          padding: '24px',
-        }}
-      >
-        {apiError && (
-          <Alert
-            message="Erreur de sauvegarde"
-            description={
-              <div>
-                <p>Le backend a retourné une erreur :</p>
-                <code
-                  style={{
-                    fontSize: '12px',
-                    background: '#f5f5f5',
-                    padding: '8px',
-                    display: 'block',
-                    marginTop: '8px',
-                    borderRadius: '4px',
-                    color: '#d32f2f',
-                  }}
-                >
-                  {apiError}
-                </code>
-              </div>
-            }
-            type="error"
-            showIcon
-            closable
-            onClose={clearApiError}
-            style={{ marginBottom: '16px' }}
-          />
-        )}
-
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-          autoComplete="off"
-          style={{ backgroundColor: '#808080' }}
-          disabled={saving}
-        >
-          <Form.Item
-            label="Titre"
-            name="title"
-            rules={[{ required: true, message: 'Veuillez saisir le titre' }]}
-            style={{ marginBottom: 16 }}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Saisir le titre"
-              style={{ backgroundColor: 'white' }}
-              disabled={!editing || saving}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Date de publication"
-            name="yearPublished"
-            rules={[
-              {
-                required: true,
-                message: 'Veuillez saisir la date de publication',
-              },
-            ]}
-            style={{ marginBottom: 16 }}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Saisir la date de publication"
-              style={{ backgroundColor: 'white' }}
-              disabled={!editing || saving}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[
-              { required: true, message: 'Veuillez saisir une description' },
-            ]}
-            style={{ marginBottom: 16 }}
-          >
-            <Input
-              prefix={<MailOutlined />}
-              placeholder="Saisir une description"
-              style={{ backgroundColor: 'white' }}
-              disabled={!editing || saving}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Lien de la photo (facultatif)"
-            name="pictureUrl"
-            style={{ marginBottom: 24 }}
-          >
-            <Input
-              prefix={<LinkOutlined />}
-              placeholder="https://example.com/photo.jpg"
-              style={{ backgroundColor: 'white' }}
-              disabled={!editing || saving}
-            />
-          </Form.Item>
-
-          {editing && (
-            <Form.Item style={{ marginBottom: 0 }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Button
-                  onClick={handleCancel}
-                  disabled={saving}
-                  style={{ flex: 1 }}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={saving}
-                  icon={<SaveOutlined />}
-                  style={{ flex: 1 }}
-                >
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </Button>
-              </div>
-            </Form.Item>
-          )}
-        </Form>
-
-        {/* acheteurs */}
-        <div style={{ marginTop: '16px', color: 'white' }}>
-          <p>
-            <strong>Clients ayant acheté ce livre :</strong> {book.nb_books_bought}
-          </p>
-          {book.books_bought && book.books_bought.length > 0 && (
-            <p>
-              <strong>Dernier achat :</strong>{' '}
-              {book.books_bought[book.books_bought.length - 1]}
-            </p>
-          )}
-        </div>
-
-        {book.photo_link && book.photo_link.trim() !== '' && (
-          <div style={{ marginTop: '16px', textAlign: 'center' }}>
-            <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
-            <img
-              src={book.photo_link}
-              alt={`${book.first_name} ${book.last_name}`}
-              style={{
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid white',
-              }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          </div>
-        )}
-      </Card>
-
-      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-        <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
-          Retour
-        </Button>
-        <Button
-          onClick={() => {
-            window.location.href = '/books'
+    <>
+      <CreateBookModal onCreate={purchaseBook} bookId={book.id} />
+      <div style={{ padding: '0 .5rem' }}></div>
+      <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
+        <Card
+          title={`Détails du Livre ${editing ? '(Modification)' : ''}`}
+          extra={
+            !editing ? (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={handleEdit}
+              >
+                Modifier
+              </Button>
+            ) : null
+          }
+          style={{
+            backgroundColor: '#808080',
+            border: '2px solid #000',
+            borderRadius: '8px',
           }}
-          style={{ flex: 1 }}
+          bodyStyle={{
+            backgroundColor: '#808080',
+            padding: '24px',
+          }}
         >
-          Liste des livres
-        </Button>
+          {apiError && (
+            <Alert
+              message="Erreur de sauvegarde"
+              description={
+                <div>
+                  <p>Le backend a retourné une erreur :</p>
+                  <code
+                    style={{
+                      fontSize: '12px',
+                      background: '#f5f5f5',
+                      padding: '8px',
+                      display: 'block',
+                      marginTop: '8px',
+                      borderRadius: '4px',
+                      color: '#d32f2f',
+                    }}
+                  >
+                    {apiError}
+                  </code>
+                </div>
+              }
+              type="error"
+              showIcon
+              closable
+              onClose={clearApiError}
+              style={{ marginBottom: '16px' }}
+            />
+          )}
+
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSave}
+            autoComplete="off"
+            style={{ backgroundColor: '#808080' }}
+            disabled={saving}
+          >
+            <Form.Item
+              label="Titre"
+              name="title"
+              rules={[{ required: true, message: 'Veuillez saisir le titre' }]}
+              style={{ marginBottom: 16 }}
+            >
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Saisir le titre"
+                style={{ backgroundColor: 'white' }}
+                disabled={!editing || saving}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Date de publication"
+              name="yearPublished"
+              rules={[
+                {
+                  required: true,
+                  message: 'Veuillez saisir la date de publication',
+                },
+              ]}
+              style={{ marginBottom: 16 }}
+            >
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Saisir la date de publication"
+                style={{ backgroundColor: 'white' }}
+                disabled={!editing || saving}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Description"
+              name="description"
+              rules={[
+                { required: true, message: 'Veuillez saisir une description' },
+              ]}
+              style={{ marginBottom: 16 }}
+            >
+              <Input
+                prefix={<MailOutlined />}
+                placeholder="Saisir une description"
+                style={{ backgroundColor: 'white' }}
+                disabled={!editing || saving}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Lien de la photo (facultatif)"
+              name="pictureUrl"
+              style={{ marginBottom: 24 }}
+            >
+              <Input
+                prefix={<LinkOutlined />}
+                placeholder="https://example.com/photo.jpg"
+                style={{ backgroundColor: 'white' }}
+                disabled={!editing || saving}
+              />
+            </Form.Item>
+
+            {editing && (
+              <Form.Item style={{ marginBottom: 0 }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button
+                    onClick={handleCancel}
+                    disabled={saving}
+                    style={{ flex: 1 }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={saving}
+                    icon={<SaveOutlined />}
+                    style={{ flex: 1 }}
+                  >
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </Button>
+                </div>
+              </Form.Item>
+            )}
+          </Form>
+
+          {/* acheteurs */}
+          <div style={{ marginTop: '16px', color: 'white' }}>
+            <p>
+              <strong>Clients ayant acheté ce livre :</strong> {book.nb_books_bought}
+            </p>
+            {book.books_bought && book.books_bought.length > 0 && (
+              <p>
+                <strong>Dernier achat :</strong>{' '}
+                {book.books_bought[book.books_bought.length - 1]}
+              </p>
+            )}
+          </div>
+
+          {book.photo_link && book.photo_link.trim() !== '' && (
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
+              <img
+                src={book.photo_link}
+                alt={`${book.first_name} ${book.last_name}`}
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid white',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
+        </Card>
+
+        
+        
+        {/* Carte livres achetés */}
+        <Card
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookOutlined />
+              <span>Livres Achetés ({client.nb_books_bought})</span>
+            </div>
+          }
+          style={{
+            backgroundColor: '#808080',
+            border: '2px solid #000',
+            borderRadius: '8px',
+          }}
+          bodyStyle={{
+            backgroundColor: '#808080',
+            padding: '24px',
+          }}
+        >
+          {client.books_bought && client.books_bought.length > 0 ? (
+            <List
+              dataSource={client.books_bought}
+              renderItem={(book: Book) => (
+                <List.Item
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: '#808080',
+                    borderBottom: '1px solid #000',
+                    padding: '16px 0',
+                  }}
+                  onClick={(): void => goToBookDetails(book.id)}
+                  actions={[
+                    <Button
+                      key="details"
+                      type="link"
+                      icon={<BookOutlined />}
+                      onClick={(): void => goToBookDetails(book.id)}
+                    >
+                      Voir détails
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    avatar={
+                      book.pictureUrl ? (
+                        <img
+                          src={book.pictureUrl}
+                          alt={book.title}
+                          style={{
+                            width: '60px',
+                            height: '80px',
+                            objectFit: 'cover',
+                            borderRadius: '4px',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '60px',
+                            height: '80px',
+                            backgroundColor: '#1890ff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '4px',
+                            color: 'white',
+                          }}
+                        >
+                          <BookOutlined />
+                        </div>
+                      )
+                    }
+                    title={
+                      <Text strong style={{ color: 'white', fontSize: '16px' }}>
+                        {book.title}
+                      </Text>
+                    }
+                    description={
+                      <div style={{ color: '#f0f0f0' }}>
+                        <div>
+                          <strong>Auteur :</strong> {book.author.firstName}{' '}
+                          {book.author.lastName}
+                        </div>
+                        <div>
+                          <strong>Année :</strong> {book.yearPublished}
+                        </div>
+                        {book.description && (
+                          <div style={{ marginTop: '4px' }}>
+                            {book.description.length > 100
+                              ? `${book.description.substring(0, 100)}...`
+                              : book.description}
+                          </div>
+                        )}
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'white' }}>
+              <BookOutlined
+                style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}
+              />
+              <div>Aucun livre acheté</div>
+              <Text type="secondary" style={{ color: '#f0f0f0' }}>
+                Ce client n&apos;a pas encore acheté de livres
+              </Text>
+            </div>
+          )}
+        </Card>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+          <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
+            Retour
+          </Button>
+          <Button
+            onClick={() => {
+              window.location.href = '/books'
+            }}
+            style={{ flex: 1 }}
+          >
+            Liste des livres
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
