@@ -56,5 +56,4 @@ export class ClientController {
   sellBook(@Body() createSellDto: CreateSellDto): Promise<SellsEntity> {
     return this.clientService.sellBook(createSellDto);
   }
-
 }
