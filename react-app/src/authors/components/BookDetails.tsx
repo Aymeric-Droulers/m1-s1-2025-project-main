@@ -1,0 +1,288 @@
+// BookDetails.tsx
+
+import { useState, useEffect } from 'react'
+import { Form, Input, Button, Card, message, Spin, Alert } from 'antd'
+import {
+  UserOutlined,
+  MailOutlined,
+  LinkOutlined,
+  SaveOutlined,
+  EditOutlined,
+} from '@ant-design/icons'
+import { useBook } from '../providers/useBookDetailsProvider'
+import type { BookUpdatePayload } from '../BookModel'
+
+export function BookDetails() {
+  const { book, loading, error, saving, apiError, updateBook, clearApiError } =
+    useBook()
+
+  const [editing, setEditing] = useState(false)
+  const [form] = Form.useForm()
+
+  // Remplir le formulaire quand on a le livre
+  useEffect(() => {
+    if (book) {
+      form.setFieldsValue({
+        title: book.title,
+        yearPublished: book.yearPublished,
+        description: book.description,
+        pictureUrl: book.pictureUrl || '',
+      })
+    }
+  }, [book, form])
+
+  const handleSave = async (values: BookUpdatePayload) => {
+    try {
+      await updateBook(values)
+      setEditing(false)
+      message.success('Livre modifié avec succès')
+    } catch {
+      message.error('Erreur lors de la modification du livre')
+    }
+  }
+
+  const handleEdit = () => {
+    setEditing(true)
+    clearApiError()
+  }
+
+  const handleCancel = () => {
+    setEditing(false)
+    clearApiError()
+    if (book) {
+      form.setFieldsValue({
+        title: book.title,
+        yearPublished: book.yearPublished,
+        description: book.description,
+        pictureUrl: book.pictureUrl || '',
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '200px',
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    )
+  }
+
+  if (error || !book) {
+    return (
+      <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
+        <Card>
+          <div style={{ textAlign: 'center', color: 'red' }}>
+            {error || 'Livre non trouvé'}
+          </div>
+          <Button
+            onClick={() => window.history.back()}
+            style={{ marginTop: '16px', width: '100%' }}
+          >
+            Retour
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
+      <Card
+        title={`Détails du Livre ${editing ? '(Modification)' : ''}`}
+        extra={
+          !editing ? (
+            <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
+              Modifier
+            </Button>
+          ) : null
+        }
+        style={{
+          backgroundColor: '#808080',
+          border: '2px solid #000',
+          borderRadius: '8px',
+        }}
+        bodyStyle={{
+          backgroundColor: '#808080',
+          padding: '24px',
+        }}
+      >
+        {apiError && (
+          <Alert
+            message="Erreur de sauvegarde"
+            description={
+              <div>
+                <p>Le backend a retourné une erreur :</p>
+                <code
+                  style={{
+                    fontSize: '12px',
+                    background: '#f5f5f5',
+                    padding: '8px',
+                    display: 'block',
+                    marginTop: '8px',
+                    borderRadius: '4px',
+                    color: '#d32f2f',
+                  }}
+                >
+                  {apiError}
+                </code>
+              </div>
+            }
+            type="error"
+            showIcon
+            closable
+            onClose={clearApiError}
+            style={{ marginBottom: '16px' }}
+          />
+        )}
+
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSave}
+          autoComplete="off"
+          style={{ backgroundColor: '#808080' }}
+          disabled={saving}
+        >
+          <Form.Item
+            label="Titre"
+            name="title"
+            rules={[{ required: true, message: 'Veuillez saisir le titre' }]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Saisir le titre"
+              style={{ backgroundColor: 'white' }}
+              disabled={!editing || saving}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Date de publication"
+            name="yearPublished"
+            rules={[
+              {
+                required: true,
+                message: 'Veuillez saisir la date de publication',
+              },
+            ]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Saisir la date de publication"
+              style={{ backgroundColor: 'white' }}
+              disabled={!editing || saving}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[
+              { required: true, message: 'Veuillez saisir une description' },
+            ]}
+            style={{ marginBottom: 16 }}
+          >
+            <Input
+              prefix={<MailOutlined />}
+              placeholder="Saisir une description"
+              style={{ backgroundColor: 'white' }}
+              disabled={!editing || saving}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Lien de la photo (facultatif)"
+            name="pictureUrl"
+            style={{ marginBottom: 24 }}
+          >
+            <Input
+              prefix={<LinkOutlined />}
+              placeholder="https://example.com/photo.jpg"
+              style={{ backgroundColor: 'white' }}
+              disabled={!editing || saving}
+            />
+          </Form.Item>
+
+          {editing && (
+            <Form.Item style={{ marginBottom: 0 }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Button
+                  onClick={handleCancel}
+                  disabled={saving}
+                  style={{ flex: 1 }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={saving}
+                  icon={<SaveOutlined />}
+                  style={{ flex: 1 }}
+                >
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                </Button>
+              </div>
+            </Form.Item>
+          )}
+        </Form>
+
+        {/* acheteurs */}
+        <div style={{ marginTop: '16px', color: 'white' }}>
+          <p>
+            <strong>Clients ayant acheté ce livre :</strong> {book.nb_books_bought}
+          </p>
+          {book.books_bought && book.books_bought.length > 0 && (
+            <p>
+              <strong>Dernier achat :</strong>{' '}
+              {book.books_bought[book.books_bought.length - 1]}
+            </p>
+          )}
+        </div>
+
+        {book.photo_link && book.photo_link.trim() !== '' && (
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <p style={{ color: 'white', marginBottom: '8px' }}>Photo actuelle :</p>
+            <img
+              src={book.photo_link}
+              alt={`${book.first_name} ${book.last_name}`}
+              style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid white',
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          </div>
+        )}
+      </Card>
+
+      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+        <Button onClick={() => window.history.back()} style={{ flex: 1 }}>
+          Retour
+        </Button>
+        <Button
+          onClick={() => {
+            window.location.href = '/books'
+          }}
+          style={{ flex: 1 }}
+        >
+          Liste des livres
+        </Button>
+      </div>
+    </div>
+  )
+}

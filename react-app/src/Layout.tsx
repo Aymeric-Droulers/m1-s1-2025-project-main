@@ -41,6 +41,12 @@ export function Layout({ children }: LayoutProps) {
       key: 'createClient',
       icon: <CiOutlined />,
     },
+    {
+      //creer un client
+      label: <Link to="/authors">Authors</Link>,
+      key: 'authors',
+      icon: <CiOutlined />,
+    },
   ]
 
   return (
